@@ -7,16 +7,7 @@ const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
-});
-
-// Add auth token to requests
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Token ${token}`;
-  }
-  return config;
+  withCredentials: true, // For session-based authentication
 });
 
 // Types

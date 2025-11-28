@@ -48,6 +48,20 @@ class RoleBasedPermission(permissions.BasePermission):
         return True
 
 
+class InvoicePermission(permissions.BasePermission):
+    """Permission class for invoice access - admin, doctor, and cashier roles."""
+    
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        # Read access for authenticated users
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        # Write access only for admin, doctor, and cashier
+        allowed_roles = [User.Role.ADMIN, User.Role.DOCTOR, User.Role.CASHIER]
+        return request.user.role in allowed_roles
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet for User model."""
     
@@ -215,7 +229,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     """ViewSet for Invoice model."""
     
     queryset = Invoice.objects.select_related('patient', 'medical_record', 'created_by').all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [InvoicePermission]
     
     def get_serializer_class(self):
         if self.action == 'create':
