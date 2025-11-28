@@ -1,0 +1,50 @@
+.invoices-page {
+  padding: 2rem;
+}
+
+.filters {
+  margin-bottom: 1.5rem;
+}
+
+.filters select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  min-width: 200px;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.badge-warning {
+  background-color: #f39c12;
+  color: white;
+}
+
+.badge-info {
+  background-color: #3498db;
+  color: white;
+}
+
+.badge-success {
+  background-color: #27ae60;
+  color: white;
+}
+
+.badge-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-success {
+  background-color: #27ae60 !important;
+}
+
+.btn-success:hover {
+  background-color: #219a52 !important;
+}
