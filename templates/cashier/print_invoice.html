@@ -1,0 +1,471 @@
+{% load static %}
+{% load clinic_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ invoice.receipt_number }} - Nora Dental Clinic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 10px;
+            background: white;
+            color: #333;
+        }
+        
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border: 2px solid #333;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #7c3aed;
+            padding-bottom: 10px;
+        }
+        
+        .logo-section {
+            flex: 0 0 100px;
+        }
+        
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+        
+        .clinic-info-section {
+            flex: 1;
+            text-align: right;
+        }
+        
+        .clinic-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 3px;
+        }
+        
+        .clinic-tagline {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .clinic-info {
+            font-size: 9px;
+            color: #374151;
+            line-height: 1.4;
+        }
+        
+        .invoice-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+            text-align: center;
+            color: #1f2937;
+            letter-spacing: 2px;
+        }
+        
+        .invoice-number {
+            text-align: center;
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+        
+        .info-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 5px;
+        }
+        
+        .info-block {
+            padding: 5px;
+        }
+        
+        .info-header {
+            font-weight: bold;
+            color: #1f2937;
+            font-size: 9px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+            border-bottom: 2px solid #7c3aed;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 8px;
+            margin-bottom: 2px;
+        }
+        
+        .info-value {
+            font-size: 9px;
+            margin-bottom: 4px;
+            color: #1f2937;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            border: 1px solid #d1d5db;
+        }
+        
+        th {
+            background: #f3f4f6;
+            color: #1f2937;
+            padding: 8px;
+            text-align: left;
+            font-size: 9px;
+            font-weight: 600;
+            border: 1px solid #d1d5db;
+        }
+        
+        td {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 9px;
+            color: #374151;
+        }
+        
+        th:last-child, td:last-child {
+            text-align: right;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .totals {
+            margin-top: 15px;
+            margin-left: auto;
+            max-width: 350px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 5px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 15px;
+            font-size: 10px;
+        }
+        
+        .total-label {
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .total-value {
+            text-align: right;
+            color: #1f2937;
+            min-width: 120px;
+            font-weight: bold;
+        }
+        
+        .insurance-row {
+            color: #2563eb !important;
+        }
+        
+        .insurance-row .total-label,
+        .insurance-row .total-value {
+            color: #2563eb !important;
+            font-weight: bold;
+        }
+        
+        .grand-total {
+            font-size: 14px;
+            font-weight: bold;
+            border-top: 2px solid #7c3aed;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+        
+        .grand-total .total-label,
+        .grand-total .total-value {
+            color: #059669 !important;
+            font-weight: bold;
+        }
+        
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 0 20px;
+        }
+        
+        .signature-box {
+            text-align: center;
+            flex: 0 0 200px;
+        }
+        
+        .signature-line {
+            border-bottom: 2px solid #1f2937;
+            margin-bottom: 3px;
+            height: 30px;
+        }
+        
+        .signature-label {
+            font-size: 9px;
+            color: #374151;
+            font-weight: 600;
+        }
+        
+        .footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 8px;
+            color: #6b7280;
+        }
+        
+        .thank-you {
+            font-size: 9px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .payment-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 8px;
+        }
+        
+        .paid {
+            background: #10b981;
+            color: white;
+        }
+        
+        .pending {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            .invoice-container {
+                border: none;
+                padding: 20px;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .print-button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">
+        🖨️ Print Invoice
+    </button>
+    
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="{% static 'images/logo.png' %}" alt="Nora Dental Clinic Logo" class="logo-img">
+            </div>
+            <div class="clinic-info-section">
+                <div class="clinic-name">Nora Dental Clinic</div>
+                <div class="clinic-tagline">Professional Dental Care</div>
+                <div class="clinic-info">
+                    Address: Kigali, Gasabo<br>
+                    Email: norhadentalclinic@gmail.com<br>
+                    Tel: +250 798 287 919
+                </div>
+            </div>
+        </div>
+        
+        <div class="invoice-title">INVOICE</div>
+        <div class="invoice-number">Invoice No: <strong>{{ invoice.receipt_number }}</strong></div>
+        
+        <!-- Invoice Info -->
+        <div class="info-section">
+            <div class="info-block">
+                <div class="info-header">Patient Information</div>
+                <div class="info-label">Patient ID:</div>
+                <div class="info-value">{{ visit.patient.patient_id }}</div>
+                
+                <div class="info-label">Name:</div>
+                <div class="info-value">{{ visit.patient.first_name }} {{ visit.patient.last_name }}</div>
+                
+                <div class="info-label">Phone:</div>
+                <div class="info-value">{{ visit.patient.phone }}</div>
+                
+                <div class="info-label">Age:</div>
+                <div class="info-value">
+                    {% if visit.patient.dob %}
+                        {{ visit.patient.dob|calculate_age }} years
+                    {% else %}
+                        --
+                    {% endif %}
+                </div>
+                
+                <div class="info-label">Gender:</div>
+                <div class="info-value">{{ visit.patient.get_gender_display|default:"--" }}</div>
+                
+                <div class="info-label">Weight:</div>
+                <div class="info-value">{{ visit.weight_kg|default:"--" }} kg</div>
+            </div>
+            
+            <div class="info-block">
+                <div class="info-header">Insurance Details</div>
+                <div class="info-label">Insurance:</div>
+                <div class="info-value">{{ visit.patient.insurer|default:"RSSB/RAMA" }}</div>
+                
+                <div class="info-label">Coverage:</div>
+                <div class="info-value">{{ visit.patient.insurance_coverage_pct|default:"--" }}%</div>
+                
+                <div class="info-label">Member Number:</div>
+                <div class="info-value">{{ visit.patient.membership_number|default:"--" }}</div>
+                
+                <div class="info-label">Affiliation/Occupation:</div>
+                <div class="info-value">{{ visit.patient.occupation|default:"--" }}</div>
+            </div>
+            
+            <div class="info-block">
+                <div class="info-header">Medical Information</div>
+                <div class="info-label">Date:</div>
+                <div class="info-value">{{ invoice.created_at|date:"d/m/Y" }}</div>
+                
+                <div class="info-label">Disease Type:</div>
+                <div class="info-value">{{ visit.disease_type|default:"Natural Disease" }}</div>
+                
+                <div class="info-label">Status:</div>
+                <div class="info-value">
+                    <span class="payment-status {% if invoice.paid %}paid{% else %}pending{% endif %}">
+                        {{ invoice.get_status_display|default:"Outpatient" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Services Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 80px;">Code</th>
+                    <th style="width: 120px;">Service</th>
+                    <th style="width: 180px;">Details</th>
+                    <th style="width: 60px; text-align: center;">Qty</th>
+                    <th style="width: 100px;">Unit Price</th>
+                    <th style="width: 120px;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for billing in billing_items %}
+                <tr>
+                    <td>{{ billing.item.tariff.code|default:forloop.counter }}</td>
+                    <td>{{ billing.item.tariff.name }}</td>
+                    <td>{{ billing.item.notes|default:"--" }}</td>
+                    <td style="text-align: center;">{{ billing.item.qty }}</td>
+                    <td>
+                        {% if visit.patient.is_insured %}
+                            {{ billing.item.price_insurance_snapshot|floatformat:0 }} RWF
+                        {% else %}
+                            {{ billing.item.price_private_snapshot|floatformat:0 }} RWF
+                        {% endif %}
+                    </td>
+                    <td>{{ billing.subtotal|floatformat:0 }} RWF</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #999;">No items</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Totals -->
+        <div class="totals">
+            <div class="total-row">
+                <div class="total-label">Subtotal:</div>
+                <div class="total-value">{{ total_insurance|floatformat:0 }} RWF</div>
+            </div>
+            {% if visit.patient.is_insured %}
+                <div class="total-row insurance-row">
+                    <div class="total-label">Insurance Pays ({{ coverage_pct }}%):</div>
+                    <div class="total-value">{{ insurance_pays|floatformat:0 }} RWF</div>
+                </div>
+            {% endif %}
+            <div class="total-row grand-total">
+                <div class="total-label">Patient Balance:</div>
+                <div class="total-value">{{ patient_pays_total|floatformat:0 }} RWF</div>
+            </div>
+        </div>
+        
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Patient Signature</div>
+                <div style="font-size: 7px; color: #9ca3af; margin-top: 3px;">Name:_______________________</div>
+                <div style="font-size: 7px; color: #9ca3af;">Phone:______________________</div>
+                <div style="font-size: 7px; color: #9ca3af;">Date:_______________________</div>
+            </div>
+            
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Doctor/Authorized Signature</div>
+                <div style="font-size: 8px; color: #1f2937; margin-top: 5px; font-weight: 600;">Nora Dental Clinic</div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p class="thank-you">Thank you for choosing Nora Dental Clinic - Your Smile, Our Priority!</p>
+            <p style="margin-bottom: 10px;">Printed by <strong>{{ request.user.get_full_name|default:request.user.username }}</strong></p>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-print on load (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Create Purchase - Finance{% endblock %}
+
+{% block page_title %}Create New Purchase{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Purchase Registration Form</h4>
+                    <a href="{% url 'purchase_list' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="purchase_type" class="form-label">Purchase Type <span class="text-danger">*</span></label>
+                                <select name="purchase_type" id="purchase_type" class="form-select" required>
+                                    <option value="">Select Type</option>
+                                    {% for value, label in purchase_types %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="purchase_date" class="form-label">Purchase Date <span class="text-danger">*</span></label>
+                                <input type="date" name="purchase_date" id="purchase_date" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="item_name" class="form-label">Item Name <span class="text-danger">*</span></label>
+                                <input type="text" name="item_name" id="item_name" class="form-control" required placeholder="Enter item name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="department" class="form-label">Department</label>
+                                <select name="department" id="department" class="form-select">
+                                    <option value="">Select Department (Optional)</option>
+                                    {% for dept in departments %}
+                                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="supplier_name" class="form-label">Supplier Name</label>
+                                <input type="text" name="supplier_name" id="supplier_name" class="form-control" placeholder="Enter supplier name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="supplier_contact" class="form-label">Supplier Contact</label>
+                                <input type="text" name="supplier_contact" id="supplier_contact" class="form-control" placeholder="Phone/Email">
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                                <input type="number" name="quantity" id="quantity" class="form-control" step="0.01" required min="0" placeholder="0">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="unit" class="form-label">Unit <span class="text-danger">*</span></label>
+                                <input type="text" name="unit" id="unit" class="form-control" required placeholder="e.g., pcs, kg, liters">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="price_per_unit" class="form-label">Price Per Unit (RWF) <span class="text-danger">*</span></label>
+                                <input type="number" name="price_per_unit" id="price_per_unit" class="form-control" step="0.01" required min="0" placeholder="0.00">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="total_cost" class="form-label">Total Cost (RWF)</label>
+                                <input type="text" id="total_cost" class="form-control" readonly placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="invoice_number" class="form-label">Invoice Number</label>
+                                <input type="text" name="invoice_number" id="invoice_number" class="form-control" placeholder="Enter invoice number">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="expiry_date" class="form-label">Expiry Date</label>
+                                <input type="date" name="expiry_date" id="expiry_date" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="invoice_file" class="form-label">Invoice File (Optional)</label>
+                                <input type="file" name="invoice_file" id="invoice_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">Accepted formats: PDF, JPG, PNG</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="notes" class="form-label">Notes</label>
+                                <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Enter any additional notes or remarks"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'purchase_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Purchase
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 20px;
+    }
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .text-danger {
+        color: #dc3545;
+    }
+    .btn {
+        border-radius: 6px;
+        padding: 8px 16px;
+    }
+</style>
+
+<script>
+    // Auto-calculate total cost
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.getElementById('quantity');
+        const priceInput = document.getElementById('price_per_unit');
+        const totalCostInput = document.getElementById('total_cost');
+        
+        function calculateTotal() {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            const total = quantity * price;
+            totalCostInput.value = total.toFixed(2);
+        }
+        
+        quantityInput.addEventListener('input', calculateTotal);
+        priceInput.addEventListener('input', calculateTotal);
+        
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('purchase_date').value = today;
+    });
+</script>
+{% endblock %}

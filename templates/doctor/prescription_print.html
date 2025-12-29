@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prescription - Nora Dental Clinic</title>
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                margin: 0;
+                padding: 20px;
+            }
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .prescription-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2563eb;
+            margin: 0;
+            font-size: 32px;
+        }
+        
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .rx-symbol {
+            font-size: 48px;
+            color: #2563eb;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .patient-info, .doctor-info {
+            margin: 20px 0;
+        }
+        
+        .info-row {
+            display: flex;
+            margin: 8px 0;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            min-width: 150px;
+            color: #333;
+        }
+        
+        .info-value {
+            color: #666;
+        }
+        
+        .prescription-body {
+            margin: 30px 0;
+            min-height: 300px;
+        }
+        
+        .prescription-item {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #2563eb;
+        }
+        
+        .medication-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .medication-qty {
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .medication-instructions {
+            color: #444;
+            font-style: italic;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+        
+        .instructions-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 5px;
+        }
+        
+        .instructions-section h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            border-top: 2px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .signature {
+            margin-top: 60px;
+            text-align: right;
+        }
+        
+        .signature-line {
+            border-top: 2px solid #333;
+            width: 250px;
+            margin: 0 0 5px auto;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .print-button:hover {
+            background: #1d4ed8;
+        }
+        
+        .date-info {
+            text-align: right;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="print-button no-print">
+        <i class="fas fa-print"></i> Print Prescription
+    </button>
+    
+    <div class="prescription-container">
+        <div class="header">
+            <h1>NORA DENTAL CLINIC</h1>
+            <p>KG 9 Ave, Kigali, Rwanda</p>
+            <p>Phone: +250 788 000 000 | Email: info@noradental.rw</p>
+        </div>
+        
+        <div class="date-info">
+            <strong>Date:</strong> {{ prescription.created_at|date:"F d, Y" }}
+        </div>
+        
+        <div class="patient-info">
+            <h3 style="color: #2563eb; margin-bottom: 15px;">Patient Information</h3>
+            <div class="info-row">
+                <span class="info-label">Patient Name:</span>
+                <span class="info-value">{{ prescription.patient.user.get_full_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Patient ID:</span>
+                <span class="info-value">{{ prescription.patient.patient_id }}</span>
+            </div>
+            {% if prescription.patient.date_of_birth %}
+            <div class="info-row">
+                <span class="info-label">Date of Birth:</span>
+                <span class="info-value">{{ prescription.patient.date_of_birth|date:"M d, Y" }}</span>
+            </div>
+            {% endif %}
+            {% if prescription.patient.phone %}
+            <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value">{{ prescription.patient.phone }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="rx-symbol">℞</div>
+        
+        <div class="prescription-body">
+            <h3 style="color: #2563eb; margin-bottom: 20px;">Prescribed Medications</h3>
+            
+            {% for item in prescription.items.all %}
+            <div class="prescription-item">
+                <div class="medication-name">
+                    {{ forloop.counter }}. {{ item.display_name }}
+                </div>
+                <div class="medication-qty">
+                    <strong>Quantity:</strong> {{ item.quantity }}
+                </div>
+                {% if item.dosage_instructions %}
+                <div class="medication-instructions">
+                    <strong>Directions:</strong> {{ item.dosage_instructions }}
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p style="color: #999; text-align: center; padding: 40px;">No medications prescribed</p>
+            {% endfor %}
+        </div>
+        
+        {% if prescription.instructions %}
+        <div class="instructions-section">
+            <h3>Additional Instructions</h3>
+            <p>{{ prescription.instructions }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            <div class="doctor-info">
+                <h3 style="color: #2563eb; margin-bottom: 15px;">Prescribing Doctor</h3>
+                <div class="info-row">
+                    <span class="info-label">Doctor Name:</span>
+                    <span class="info-value">Dr. {{ prescription.doctor.user.get_full_name }}</span>
+                </div>
+                {% if prescription.doctor.phone %}
+                <div class="info-row">
+                    <span class="info-label">Contact:</span>
+                    <span class="info-value">{{ prescription.doctor.phone }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="signature">
+                <div class="signature-line"></div>
+                <div style="font-weight: bold;">Doctor's Signature</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px dashed #ddd; text-align: center; color: #999; font-size: 12px;">
+            <p>This is a computer-generated prescription. For queries, please contact Nora Dental Clinic.</p>
+            <p>Printed on: {{ print_date|date:"F d, Y H:i" }}</p>
+        </div>
+    </div>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>

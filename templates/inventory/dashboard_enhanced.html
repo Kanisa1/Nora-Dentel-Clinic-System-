@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory Dashboard - Nora Dental Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-warehouse"></i>
+        Inventory Dashboard
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-clinic-purple hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Total Items</p>
+                    <p class="text-3xl font-bold text-clinic-purple mt-2">{{ total_items|default:0 }}</p>
+                </div>
+                <i class="fas fa-boxes text-4xl text-clinic-light"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Equipment</p>
+                    <p class="text-3xl font-bold text-blue-600 mt-2">{{ equipment_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-tools text-4xl text-blue-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Maintenance</p>
+                    <p class="text-3xl font-bold text-yellow-600 mt-2">{{ maintenance_due|default:0 }}</p>
+                </div>
+                <i class="fas fa-wrench text-4xl text-yellow-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Low Stock</p>
+                    <p class="text-3xl font-bold text-red-600 mt-2">{{ low_stock_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-exclamation-triangle text-4xl text-red-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Total Value</p>
+                    <p class="text-2xl font-bold text-green-600 mt-2">{{ total_inventory_value|floatformat:0|default:0 }} RWF</p>
+                </div>
+                <i class="fas fa-money-bill-wave text-4xl text-green-100"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Value Breakdown -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-pie text-clinic-purple"></i>
+                Inventory Value Breakdown
+            </h3>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <span class="font-semibold text-gray-700">Fixed Assets</span>
+                    <span class="text-xl font-bold text-blue-600">{{ total_asset_value|floatformat:0|default:0 }} RWF</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <span class="font-semibold text-gray-700">Consumables</span>
+                    <span class="text-xl font-bold text-green-600">{{ total_consumable_value|floatformat:0|default:0 }} RWF</span>
+                </div>
+                <div class="flex justify-between items-center p-4 bg-clinic-purple text-white rounded">
+                    <span class="font-semibold">Total Inventory Value</span>
+                    <span class="text-2xl font-bold">{{ total_inventory_value|floatformat:0|default:0 }} RWF</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-tasks text-clinic-purple"></i>
+                Assets by Type
+            </h3>
+            <div class="space-y-3">
+                {% for asset_type in assets_by_type %}
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition">
+                        <div>
+                            <span class="font-semibold text-gray-700">{{ asset_type.asset_type|title }}</span>
+                            <span class="text-gray-500 text-sm ml-2">({{ asset_type.count }} items)</span>
+                        </div>
+                        <span class="text-sm font-bold text-gray-700">{{ asset_type.total_value|floatformat:0|default:0 }} RWF</span>
+                    </div>
+                {% empty %}
+                    <p class="text-center text-gray-500 py-4">No assets recorded</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Equipment List -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-tools text-blue-600"></i>
+            Equipment & Fixed Assets
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Asset Name</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Code</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Type</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Status</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Location</th>
+                        <th class="px-4 py-2 text-right font-semibold text-gray-700">Value</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for asset in equipment_list %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 font-semibold">{{ asset.asset_name }}</td>
+                            <td class="px-4 py-2 text-gray-600 font-mono text-xs">{{ asset.asset_code }}</td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+                                    {{ asset.get_asset_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                {% if asset.status == 'active' %}
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
+                                        <i class="fas fa-check-circle"></i> Active
+                                    </span>
+                                {% elif asset.status == 'maintenance' %}
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-semibold">
+                                        <i class="fas fa-wrench"></i> Maintenance
+                                    </span>
+                                {% elif asset.status == 'damaged' %}
+                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">
+                                        <i class="fas fa-times-circle"></i> Damaged
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2 text-center text-gray-600">{{ asset.location|default:"—" }}</td>
+                            <td class="px-4 py-2 text-right font-bold text-gray-700">{{ asset.purchase_cost|floatformat:0 }} RWF</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-6 text-center text-gray-500">No equipment recorded</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Low Stock Consumables -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-box-open text-red-600"></i>
+            Low Stock Consumables
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Item Name</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Category</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">In Stock</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Min Level</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for item in low_stock_consumables %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 font-semibold">{{ item.item_name }}</td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-semibold">
+                                    {{ item.get_category_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">
+                                    {{ item.quantity_in_stock }} {{ item.unit }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-center text-gray-600">{{ item.minimum_stock_level }} {{ item.unit }}</td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="text-red-600 text-xs font-semibold">
+                                    <i class="fas fa-exclamation-triangle"></i> Low Stock
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-gray-500">
+                                <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                                <br>All consumables adequately stocked
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Expiring Consumables -->
+    {% if expiring_soon %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-calendar-times text-yellow-600"></i>
+            Expiring Soon (30 days)
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Item Name</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Expiry Date</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Days Left</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Quantity</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for item in expiring_soon %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 font-semibold">{{ item.item_name }}</td>
+                            <td class="px-4 py-2 text-center text-yellow-700">{{ item.expiry_date|date:"M d, Y" }}</td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-bold">
+                                    {{ item.expiry_date|timeuntil }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-center text-gray-600">{{ item.quantity_in_stock }} {{ item.unit }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Stock Movements -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-exchange-alt text-clinic-purple"></i>
+            Recent Stock Movements
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Date/Time</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Item</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Type</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Quantity</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">By</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for movement in recent_movements %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2">{{ movement.movement_date|date:"M d, H:i" }}</td>
+                            <td class="px-4 py-2 font-semibold">{{ movement.inventory_item.name }}</td>
+                            <td class="px-4 py-2 text-center">
+                                {% if movement.movement_type == 'in' %}
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
+                                        <i class="fas fa-arrow-down"></i> Stock In
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">
+                                        <i class="fas fa-arrow-up"></i> Stock Out
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2 text-center font-bold">{{ movement.qty }}</td>
+                            <td class="px-4 py-2 text-gray-600">
+                                {{ movement.performed_by.user.get_full_name|default:"System" }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-gray-500">No recent movements</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Today's Usage -->
+    {% if today_usage %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-chart-line text-green-600"></i>
+            Today's Consumable Usage
+            <span class="ml-2 text-sm font-normal text-gray-600">({{ today_usage_count|floatformat:0 }} units)</span>
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Item</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Quantity Used</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Used By</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Department</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for usage in today_usage %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 font-semibold">{{ usage.consumable.item_name }}</td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
+                                    {{ usage.quantity_used }} {{ usage.consumable.unit }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-gray-600">
+                                {{ usage.used_by.user.get_full_name|default:"—" }}
+                            </td>
+                            <td class="px-4 py-2 text-gray-600">
+                                {{ usage.department.name|default:"—" }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

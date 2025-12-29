@@ -1,0 +1,224 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Appointments - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-calendar-alt"></i> Appointments Management
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'reception_dashboard' %}" class="nav-link">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_appointments' %}" class="nav-link active">
+            <i class="fas fa-calendar-alt"></i> Appointments
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_schedule_appointment_form' %}" class="nav-link">
+            <i class="fas fa-calendar-plus"></i> New Appointment
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">View and manage all appointments</div>
+
+    <div style="display: grid; grid-template-columns: 1fr; gap: 30px;">
+        <!-- Today's Appointments -->
+        <div class="table-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 class="table-title" style="margin-bottom: 0;">
+                    <i class="fas fa-calendar-day"></i> Today's Appointments
+                </h3>
+                <a href="{% url 'reception_schedule_appointment_form' %}" class="btn btn-primary" style="text-decoration: none;">
+                    <i class="fas fa-plus"></i> New Appointment
+                </a>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Patient Name</th>
+                        <th>Doctor</th>
+                        <th>Department</th>
+                        <th>Notes</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for apt in today_appointments %}
+                        <tr>
+                            <td><strong>{{ apt.scheduled_at|date:"H:i" }}</strong></td>
+                            <td>{{ apt.patient.first_name }} {{ apt.patient.last_name }}</td>
+                            <td>
+                                {% if apt.doctor %}
+                                    {{ apt.doctor.user.get_full_name|default:apt.doctor.user.username }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ apt.department.name }}</td>
+                            <td style="font-size: 12px; color: #666;">{{ apt.notes|truncatewords:5 }}</td>
+                            <td>
+                                {% if apt.status == 'scheduled' %}
+                                    <span class="badge badge-info">Scheduled</span>
+                                {% elif apt.status == 'checked_in' %}
+                                    <span class="badge badge-warning">Checked In</span>
+                                {% elif apt.status == 'completed' %}
+                                    <span class="badge badge-success">Completed</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'print_appointment' apt.id %}" target="_blank" class="btn-small btn-primary" title="Print Appointment">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <a href="{% url 'reception_edit_appointment' apt.id %}" class="btn-small btn-view">Edit</a>
+                                    <button class="btn-small btn-delete" onclick="cancelAppointment({{ apt.id }})">Cancel</button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #999; padding: 30px;">
+                                No appointments scheduled for today
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Upcoming Appointments -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-calendar"></i> Upcoming Appointments (Next 10)
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Patient Name</th>
+                        <th>Doctor</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for apt in upcoming_appointments %}
+                        <tr>
+                            <td><strong>{{ apt.scheduled_at|date:"M d, Y H:i" }}</strong></td>
+                            <td>{{ apt.patient.first_name }} {{ apt.patient.last_name }}</td>
+                            <td>
+                                {% if apt.doctor %}
+                                    {{ apt.doctor.user.get_full_name|default:apt.doctor.user.username }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ apt.department.name }}</td>
+                            <td>
+                                <span class="badge badge-info">Scheduled</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'print_appointment' apt.id %}" target="_blank" class="btn-small btn-primary" title="Print Appointment">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <a href="{% url 'reception_edit_appointment' apt.id %}" class="btn-small btn-view">Edit</a>
+                                    <button class="btn-small btn-delete" onclick="cancelAppointment({{ apt.id }})">Cancel</button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #999; padding: 30px;">
+                                No upcoming appointments scheduled
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function cancelAppointment(appointmentId) {
+    if (confirm('Are you sure you want to cancel this appointment?')) {
+        fetch(`/reception/appointments/${appointmentId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error cancelling appointment');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error cancelling appointment');
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .btn-small.btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-small.btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Clinical Record - Patient {{ visit.patient.id }} - Nora Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-file-medical"></i>
+        Clinical Record - {{ visit.patient.first_name }} {{ visit.patient.last_name }}
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Patient Summary -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h2 class="text-2xl font-bold text-clinic-dark">{{ visit.patient.first_name }} {{ visit.patient.last_name }}</h2>
+                <p class="text-gray-600">Age: {{ visit.patient.age }} | Gender: {{ visit.patient.get_gender_display|default:"—" }}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-600">Visit Date: {{ visit.created_at|date:"d/m/Y H:i" }}</p>
+                <p class="text-sm text-gray-600">Department: {{ visit.department.name }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Tabs -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Tab Navigation -->
+        <div class="flex border-b">
+            <button class="tab-btn active px-6 py-3 font-semibold text-clinic-purple border-b-2 border-clinic-purple bg-clinic-light flex items-center gap-2">
+                <i class="fas fa-heartbeat"></i> Triage
+            </button>
+            <button class="tab-btn px-6 py-3 font-semibold text-gray-600 hover:text-clinic-dark flex items-center gap-2">
+                <i class="fas fa-stethoscope"></i> Examination
+            </button>
+            <button class="tab-btn px-6 py-3 font-semibold text-gray-600 hover:text-clinic-dark flex items-center gap-2">
+                <i class="fas fa-list-check"></i> Diagnosis
+            </button>
+            <button class="tab-btn px-6 py-3 font-semibold text-gray-600 hover:text-clinic-dark flex items-center gap-2">
+                <i class="fas fa-pills"></i> Prescription
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="p-6">
+            <!-- Triage Tab -->
+            <div class="tab-content active">
+                <h3 class="text-xl font-bold text-clinic-dark mb-4">Vital Signs & Triage</h3>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Temperature (°C)</label>
+                            <input type="number" step="0.1" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                                   name="temperature" value="{{ triage.temperature_c|default:'' }}" placeholder="37.5">
+                            <span class="text-xs text-gray-500 mt-1">Normal: 36.5-37.5°C</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Pulse (bpm)</label>
+                            <input type="number" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                                   name="pulse" value="{{ triage.pulse|default:'' }}" placeholder="72">
+                            <span class="text-xs text-gray-500 mt-1">Normal: 60-100 bpm</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Blood Pressure</label>
+                            <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                                   name="bp" value="{{ triage.blood_pressure|default:'' }}" placeholder="120/80">
+                            <span class="text-xs text-gray-500 mt-1">Format: systolic/diastolic</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Weight (kg)</label>
+                            <input type="number" step="0.1" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                                   name="weight" value="{{ visit.weight_kg|default:'' }}" placeholder="70">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Symptoms/Chief Complaint</label>
+                        <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2 h-24" 
+                                  name="symptoms" placeholder="Describe patient's symptoms...">{{ triage.symptoms|default:'' }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Clinical Notes</label>
+                        <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2 h-24" 
+                                  name="clinical_notes" placeholder="Additional clinical observations..."></textarea>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="submit" class="bg-clinic-purple hover:bg-clinic-dark text-white font-semibold py-2 px-6 rounded-lg transition">
+                            <i class="fas fa-save"></i> Save Triage
+                        </button>
+                        <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Acts/Services Section -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-plus-circle text-clinic-purple"></i>
+            Add Services/Acts
+        </h3>
+        <div class="space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Select Service</label>
+                    <select class="w-full border border-gray-300 rounded-lg px-3 py-2" id="service-select">
+                        <option>Choose a service...</option>
+                        {% for act in available_acts %}
+                            <option value="{{ act.id }}" data-price="{{ act.price_private }}">{{ act.name }} (RWF {{ act.price_private }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Quantity</label>
+                    <div class="flex gap-2">
+                        <input type="number" value="1" min="1" class="flex-1 border border-gray-300 rounded-lg px-3 py-2" id="service-qty">
+                        <button type="button" class="bg-clinic-purple hover:bg-clinic-dark text-white font-semibold py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Items Table -->
+        <div class="mt-6">
+            <h4 class="font-semibold text-clinic-dark mb-2">Billing Items Added</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold">Service</th>
+                            <th class="px-4 py-2 text-center font-semibold">Qty</th>
+                            <th class="px-4 py-2 text-right font-semibold">Unit Price</th>
+                            <th class="px-4 py-2 text-right font-semibold">Total</th>
+                            <th class="px-4 py-2 text-center font-semibold">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        {% for item in billing_items %}
+                            <tr>
+                                <td class="px-4 py-2">{{ item.tariff.name }}</td>
+                                <td class="px-4 py-2 text-center">{{ item.qty }}</td>
+                                <td class="px-4 py-2 text-right">RWF {{ item.price_private_snapshot|floatformat:0 }}</td>
+                                <td class="px-4 py-2 text-right font-semibold">RWF {{ item.qty|mul:item.price_private_snapshot|floatformat:0 }}</td>
+                                <td class="px-4 py-2 text-center">
+                                    <button type="button" class="text-red-600 hover:text-red-800 font-semibold">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="px-4 py-4 text-center text-gray-500">No services added yet</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if billing_items %}
+                <div class="mt-4 flex justify-end">
+                    <div class="text-right space-y-2">
+                        <div class="flex justify-between gap-8">
+                            <span class="font-semibold">Total:</span>
+                            <span class="text-2xl font-bold text-clinic-purple">RWF {{ total_amount|floatformat:0 }}</span>
+                        </div>
+                        <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-receipt"></i> Generate Invoice
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

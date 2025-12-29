@@ -1,0 +1,183 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Inventory Dashboard - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-warehouse"></i> Inventory Dashboard
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'inventory_dashboard' %}" class="nav-link active">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'inventory_items' %}" class="nav-link">
+            <i class="fas fa-boxes"></i> Items
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'inventory_stock' %}" class="nav-link">
+            <i class="fas fa-boxes"></i> Stock
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'inventory_equipment' %}" class="nav-link">
+            <i class="fas fa-tools"></i> Equipment
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'inventory_profile' %}" class="nav-link">
+            <i class="fas fa-user"></i> My Profile
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Manage clinic equipment and supplies</div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_items }}</div>
+            <div class="stat-label">Total Items</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">{{ equipment_count }}</div>
+            <div class="stat-label">Equipment</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ maintenance_due }}</div>
+            <div class="stat-label">Maintenance Due</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">{{ damaged_items }}</div>
+            <div class="stat-label">Damaged Items</div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px;">
+        <!-- Equipment Status -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-tools"></i> Equipment Status
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Equipment</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Maintenance</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in equipment_list %}
+                        <tr>
+                            <td><strong>{{ item.name }}</strong></td>
+                            <td>{{ item.department }}</td>
+                            <td>
+                                {% if item.status == 'working' %}
+                                    <span class="badge badge-success">Working</span>
+                                {% elif item.status == 'faulty' %}
+                                    <span class="badge badge-danger">Faulty</span>
+                                {% else %}
+                                    <span class="badge badge-warning">In Maintenance</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.next_maintenance|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-small btn-view" onclick="updateEquipment({{ item.id }})">Update</button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #999;">No equipment recorded</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Supply Stock -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-boxes"></i> Supply Stock
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Stock</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in supply_list %}
+                        <tr>
+                            <td><strong>{{ item.name }}</strong></td>
+                            <td>{{ item.quantity }} {{ item.unit }}</td>
+                            <td>{{ item.category }}</td>
+                            <td>
+                                {% if item.quantity > item.reorder_level %}
+                                    <span class="badge badge-success">Good</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Low</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-small btn-view" onclick="editItem({{ item.id }})">Edit</button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #999;">No items recorded</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="table-container" style="margin-top: 30px;">
+        <h3 class="table-title">
+            <i class="fas fa-bolt"></i> Quick Actions
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <a href="{% url 'inventory_add_item' %}" class="btn btn-primary" style="width: 100%; padding: 15px; text-decoration: none; display: inline-block; text-align: center;">
+                <i class="fas fa-plus"></i> Add Item
+            </a>
+            <a href="{% url 'inventory_add_equipment' %}" class="btn btn-primary" style="width: 100%; padding: 15px; text-decoration: none; display: inline-block; text-align: center;">
+                <i class="fas fa-tools"></i> Add Equipment
+            </a>
+            <a href="{% url 'inventory_stock_take' %}" class="btn btn-primary" style="width: 100%; padding: 15px; text-decoration: none; display: inline-block; text-align: center;">
+                <i class="fas fa-list-check"></i> Stock Take
+            </a>
+            <a href="{% url 'inventory_maintenance_log' %}" class="btn btn-primary" style="width: 100%; padding: 15px; text-decoration: none; display: inline-block; text-align: center;">
+                <i class="fas fa-wrench"></i> Maintenance Log
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateEquipment(equipmentId) {
+    alert('Update Equipment feature coming soon');
+}
+
+function editItem(itemId) {
+    alert('Edit Item feature coming soon');
+}
+</script>
+{% endblock %}

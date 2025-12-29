@@ -1,0 +1,521 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nora Dental Clinic{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'clinic-purple': '#7A2FA6',
+                        'clinic-dark': '#3A0F45',
+                        'clinic-light': '#f0e7f5',
+                    }
+                }
+            }
+        }
+    </script>
+        <style>
+            body { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
+            .site-navbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                height: 72px;
+                padding: 0 2.5rem;
+                background: #ffffff;
+                border-bottom: 1px solid #e2e8f0;
+                box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+                position: sticky;
+                top: 0;
+                z-index: 50;
+            }
+            .site-navbar .nav-brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .site-navbar img {
+                width: 46px;
+                height: 46px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #e2e8f0;
+            }
+            .site-navbar h1 { font-size: 1.15rem; margin: 0; color: #0f172a; font-weight: 600; }
+            .site-navbar nav { display: flex; gap: 1rem; }
+            .site-navbar nav a {
+                padding: 0.45rem 0.9rem;
+                border-radius: 999px;
+                text-decoration: none;
+                color: #475569;
+                font-weight: 500;
+            }
+            .site-navbar nav a:hover { background: #f1f5f9; color: #0f172a; }
+            .navbar-cta { display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; color: #475569; }
+            .navbar-cta a {
+                color: #0f172a;
+                font-weight: 600;
+                text-decoration: none;
+            }
+            .sidebar-panel {
+                background: #0b1120;
+                color: #e2e8f0;
+                width: 17rem;
+                box-shadow: 8px 0 30px rgba(15, 23, 42, 0.2);
+            }
+            .sidebar-panel .nav-link {
+                color: #e2e8f0 !important;
+                border-radius: 10px;
+                font-weight: 500;
+                transition: background 0.2s ease, color 0.2s ease;
+                text-decoration: none;
+            }
+            .sidebar-panel .nav-link:hover {
+                background: rgba(99, 24, 167, 0.3) !important;
+                color: #fff !important;
+            }
+            .sidebar-panel .nav-link.active {
+                background: rgba(99, 24, 167, 0.5) !important;
+                color: #fff !important;
+            }
+            .workspace-topbar {
+                background: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(6px);
+                border-bottom: 1px solid #e2e8f0;
+                height: 64px;
+                padding: 0 1.75rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .workspace-topbar h2 { font-size: 1.35rem; color: #0f172a; font-weight: 600; }
+            .nav-indicator {
+                font-size: 0.85rem;
+                color: #94a3b8;
+            }
+        </style>
+    {% block extra_css %}{% endblock %}
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+    <body class="bg-slate-50">
+        <div class="h-screen flex flex-col bg-slate-100">
+            {% block home_navbar %}{% endblock %}
+            <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar -->
+            {% if not home_page %}
+            <aside id="sidebar" class="sidebar-panel flex flex-col transition-transform duration-300 fixed md:static z-40" style="background: #0b1120; color: #e2e8f0; top: 0; left: 0; height: 100vh; min-height: 100vh; width: 17rem;">
+                <!-- Logo -->
+                <div class="p-6 border-b border-white/10">
+                    <div class="flex items-center gap-3">
+                        <img src="{% static 'images/logo.png' %}" alt="Nora Clinic Logo" class="w-10 h-10 object-cover rounded-full">
+                        <div>
+                            <h1 class="font-semibold text-base">Nora Clinic</h1>
+                            <p class="text-xs text-slate-400">Dental System</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Navigation Menu -->
+                <nav class="flex-1 overflow-y-auto p-4">
+                    <div class="space-y-2">
+                        {% block nav_items %}
+                        <!-- Admin Menu -->
+                        {% if user.is_authenticated and user.clinicuser.role == 'admin' %}
+                        <a href="{% url 'admin_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-home"></i> <span>Dashboard</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">User Management</div>
+                        <a href="{% url 'admin:clinic_clinicuser_changelist' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-users-cog"></i> <span>Manage Users</span>
+                        </a>
+                        <a href="{% url 'admin:clinic_clinicuser_add' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-user-plus"></i> <span>Add User</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">System Setup</div>
+                        <a href="{% url 'admin:clinic_department_changelist' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-building"></i> <span>Departments</span>
+                        </a>
+                        <a href="{% url 'admin:clinic_patient_changelist' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-hospital-user"></i> <span>All Patients</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Quick Access</div>
+                        <a href="{% url 'reception_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-receipt"></i> <span>Reception</span>
+                        </a>
+                        <a href="{% url 'cashier_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-cash-register"></i> <span>Cashier</span>
+                        </a>
+                        <a href="{% url 'financial_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-chart-line"></i> <span>Finance</span>
+                        </a>
+                        {% endif %}
+                        <!-- Reception Menu -->
+                        {% if user.is_authenticated and user.clinicuser.role == 'reception' %}
+                        <a href="{% url 'reception_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-home"></i> <span>Dashboard</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Patient Management</div>
+                        <a href="{% url 'reception_register_patient' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-user-plus"></i> <span>Register Patient</span>
+                        </a>
+                        <a href="{% url 'reception_patient_list' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-users"></i> <span>Patient List</span>
+                        </a>
+                        <a href="{% url 'reception_create_visit' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-notes-medical"></i> <span>Create Visit</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Appointments</div>
+                        <a href="{% url 'reception_schedule_appointment_form' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-calendar-plus"></i> <span>Schedule Appointment</span>
+                        </a>
+                        <a href="{% url 'reception_appointments' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-calendar-check"></i> <span>View Appointments</span>
+                        </a>
+                        <a href="{% url 'reception_appointments_today' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-calendar-day"></i> <span>Today's Appointments</span>
+                        </a>
+                        {% endif %}
+                        <!-- Doctor Menu -->
+                        {% if user.is_authenticated and user.clinicuser.role == 'doctor' %}
+                        <a href="{% url 'doctor-dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-home"></i> <span>Dashboard</span>
+                        </a>
+                        <a href="{% url 'doctor_patient_list' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-users"></i> <span>Patients Today</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Clinical</div>
+                        <a href="{% url 'doctor_patient_list' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-file-medical"></i> <span>Clinical Records</span>
+                        </a>
+                        <a href="{% url 'doctor-dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-list-check"></i> <span>Waiting Queue</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Documents</div>
+                        <a href="{% url 'doctor-dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-certificate"></i> <span>Medical Leave</span>
+                        </a>
+                        {% endif %}
+                        <!-- Cashier Menu -->
+                        {% if user.is_authenticated and user.clinicuser.role == 'cashier' %}
+                        <a href="{% url 'cashier_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-home"></i> <span>Dashboard</span>
+                        </a>
+                        <a href="{% url 'cashier_payments' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-file-invoice"></i> <span>Invoices</span>
+                        </a>
+                        <a href="{% url 'cashier_payments' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-money-bill"></i> <span>Payments</span>
+                        </a>
+                        <a href="{% url 'cashier_reconciliation' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-chart-bar"></i> <span>Reports</span>
+                        </a>
+                        {% endif %}
+                        <!-- Pharmacy Menu -->
+                        {% if user.is_authenticated and user.clinicuser.role == 'pharmacy' %}
+                        <a href="{% url 'pharmacy_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-home"></i> <span>Dashboard</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Stock Management</div>
+                        <a href="{% url 'pharmacy_medicines' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-pills"></i> <span>Medicines</span>
+                        </a>
+                        <a href="{% url 'pharmacy_stock' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-boxes"></i> <span>Stock Levels</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Dispensing</div>
+                        <a href="{% url 'pharmacy_dispensing' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-hand-holding-medical"></i> <span>Dispense Medicine</span>
+                        </a>
+                        <a href="{% url 'pharmacy_prescriptions' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-prescription"></i> <span>Prescriptions</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Reports</div>
+                        <a href="{% url 'pharmacy_reports' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-chart-line"></i> <span>Stock Reports</span>
+                        </a>
+                        <a href="{% url 'pharmacy_alerts' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-exclamation-triangle"></i> <span>Alerts</span>
+                        </a>
+                        {% endif %}
+                        <!-- Inventory Menu -->
+                        {% if user.is_authenticated and user.clinicuser.role == 'inventory' %}
+                        <a href="{% url 'inventory_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-home"></i> <span>Dashboard</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Equipment</div>
+                        <a href="{% url 'inventory_equipment' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-tools"></i> <span>Equipment</span>
+                        </a>
+                        <a href="{% url 'inventory_maintenance' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-wrench"></i> <span>Maintenance</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Consumables</div>
+                        <a href="{% url 'inventory_consumables' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-box"></i> <span>Consumables</span>
+                        </a>
+                        <a href="{% url 'inventory_stock' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-warehouse"></i> <span>Stock Levels</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Reports</div>
+                        <a href="{% url 'inventory_reports' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-chart-bar"></i> <span>Usage Reports</span>
+                        </a>
+                        <a href="{% url 'inventory_items' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-file-export"></i> <span>Export Data</span>
+                        </a>
+                        {% endif %}
+                        <!-- Finance Menu -->
+                        {% if user.is_authenticated and user.clinicuser.role == 'finance' %}
+                        <a href="{% url 'finance_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-3 transition">
+                            <i class="fas fa-home"></i> <span>Dashboard</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Revenue</div>
+                        <a href="{% url 'income_statement' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-chart-bar"></i> <span>Revenue Analysis</span>
+                        </a>
+                        <a href="{% url 'income_statement' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-file-invoice-dollar"></i> <span>Income Statement</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Departments</div>
+                        <a href="{% url 'department_financial_report' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-building"></i> <span>Department Reports</span>
+                        </a>
+                        <a href="{% url 'doctor_financial_report' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-user-md"></i> <span>Doctor Reports</span>
+                        </a>
+                        <a href="{% url 'insurance_report' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-shield-alt"></i> <span>Insurance Reports</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Expenses</div>
+                        <a href="{% url 'expense_list' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-receipt"></i> <span>Expenses</span>
+                        </a>
+                        <a href="{% url 'purchase_list' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-shopping-cart"></i> <span>Purchases</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Financial Statements</div>
+                        <a href="{% url 'profit_loss_statement' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-chart-pie"></i> <span>Profit & Loss</span>
+                        </a>
+                        <a href="{% url 'balance_sheet' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-balance-scale"></i> <span>Balance Sheet</span>
+                        </a>
+                        <div class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase mt-3">Inventory</div>
+                        <a href="{% url 'inventory_dashboard' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-boxes"></i> <span>Stock Management</span>
+                        </a>
+                        <a href="{% url 'stock_alert_list' %}" class="nav-link flex items-center gap-3 px-4 py-2 transition text-sm">
+                            <i class="fas fa-exclamation-triangle"></i> <span>Stock Alerts</span>
+                        </a>
+                        {% endif %}
+                        {% endblock %}
+                    </div>
+                </nav>
+                <!-- User Profile Footer -->
+                <div class="border-t border-white/10 p-4 mt-auto">
+                    {% if user.is_authenticated %}
+                    <div class="flex items-center gap-3 mb-3 px-2">
+                        <div class="w-10 h-10 rounded-full bg-clinic-purple flex items-center justify-center text-white font-bold">
+                            {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-sm truncate">{{ user.get_full_name }}</p>
+                            <p class="text-xs text-slate-400 capitalize">{{ user.clinicuser.role }}</p>
+                        </div>
+                    </div>
+                    <button onclick="confirmLogout()" class="flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-500/10 rounded transition text-sm w-full text-left">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </aside>
+            {% endif %}
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Navigation Bar -->
+            <header class="workspace-topbar">
+                <div class="flex items-center gap-3">
+                    <!-- Mobile Menu Toggle -->
+                    <button id="menu-toggle" class="md:hidden text-slate-600 hover:bg-slate-200/60 p-2 rounded-lg transition">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <p class="nav-indicator uppercase tracking-[0.2em] text-xs">Workspace</p>
+                        <h2 class="text-xl md:text-2xl font-semibold text-slate-900">{% block page_title %}Dashboard{% endblock %}</h2>
+                    </div>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-4">
+                    <!-- Notifications -->
+                    <button class="relative text-slate-500 hover:text-slate-900 transition">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-full"></span>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-slate-200/70 px-3 py-2 rounded-full transition">
+                            {% if user.clinicuser.profile_picture %}
+                                <img src="{{ user.clinicuser.profile_picture.url }}" alt="Profile" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm">
+                            {% else %}
+                                <div class="w-9 h-9 bg-slate-900 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                    {{ user.username|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="text-left hidden sm:block">
+                                <p class="text-[0.8rem] text-slate-500 leading-none">Signed in</p>
+                                <p class="text-sm text-slate-900 font-medium">{{ user.username }}</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-slate-500"></i>
+                        </button>
+                        <div id="user-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-2xl border border-slate-100 z-50">
+                            <a href="{% url 'reception_profile' %}" class="block px-4 py-2 hover:bg-slate-50 rounded-t-xl">
+                                <i class="fas fa-user"></i> Profile
+                            </a>
+                            <a href="{% url 'reception_profile' %}" class="block px-4 py-2 hover:bg-slate-50">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <hr class="my-2">
+                            <a href="{% url 'reception_dashboard' %}" class="block px-4 py-2 hover:bg-rose-50 text-rose-600 rounded-b-xl">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="px-6 pt-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} rounded-lg p-4 mb-2 flex items-center gap-3 animate-slideIn"
+                             role="alert">
+                            {% if 'error' in message.tags %}
+                                <i class="fas fa-exclamation-circle text-red-600"></i>
+                                <span class="text-red-700">{{ message }}</span>
+                            {% elif 'success' in message.tags %}
+                                <i class="fas fa-check-circle text-green-600"></i>
+                                <span class="text-green-700">{{ message }}</span>
+                            {% else %}
+                                <i class="fas fa-info-circle text-blue-600"></i>
+                                <span class="text-blue-700">{{ message }}</span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-auto">
+                <div class="p-6">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
+
+        // User menu toggle
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenu = document.getElementById('user-menu');
+        
+        if (userMenuBtn) {
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userMenu.classList.toggle('hidden');
+            });
+        }
+
+        document.addEventListener('click', () => {
+            if (userMenu && !userMenu.classList.contains('hidden')) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // Close sidebar on link click (mobile)
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+        });
+    </script>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <i class="fas fa-sign-out-alt text-red-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Confirm Logout</h3>
+                    <p class="text-sm text-gray-600 mt-1">Are you sure you want to logout?</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end mt-6">
+                <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition">
+                    Cancel
+                </button>
+                <form id="logoutForm" method="POST" action="{% url 'logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
+                        Yes, Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmLogout() {
+            const modal = document.getElementById('logoutModal');
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+        }
+
+        function closeLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+        }
+
+        // Close modal on outside click
+        document.getElementById('logoutModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLogoutModal();
+            }
+        });
+    </script>
+</body>
+</html>

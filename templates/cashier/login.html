@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashier Login - Nora Dental Clinic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 p-8 text-white text-center">
+            <div class="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center">
+                <i class="fas fa-cash-register text-4xl text-green-600"></i>
+            </div>
+            <h1 class="text-3xl font-bold mb-2">Cashier Portal</h1>
+            <p class="text-green-100">Nora Dental Clinic</p>
+        </div>
+
+        <!-- Login Form -->
+        <div class="p-8">
+            {% if error %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
+                </div>
+            {% endif %}
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fas fa-user mr-2 text-green-600"></i>Username
+                    </label>
+                    <input type="text" name="username" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="Enter your username">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fas fa-lock mr-2 text-green-600"></i>Password
+                    </label>
+                    <input type="password" name="password" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="Enter your password">
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition shadow-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login to Cashier Portal
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <a href="{% url 'home' %}" class="text-green-600 hover:underline">
+                    <i class="fas fa-home mr-1"></i>Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

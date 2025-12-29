@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Medicines - Nora Dental Clinic{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h3 mb-3">
+                <i class="fas fa-pills text-purple-400"></i>
+                Medicines Inventory
+            </h1>
+            <p class="text-gray-400">Manage all medicines in pharmacy inventory</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark border-purple-500">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-gray-400 mb-1">Total Medicines</p>
+                            <h3 class="text-white">{{ total_count }}</h3>
+                        </div>
+                        <div class="text-purple-400">
+                            <i class="fas fa-capsules fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medicines Table -->
+    <div class="card bg-dark border-gray-700">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list"></i>
+                All Medicines
+            </h5>
+            <div>
+                <input type="text" id="searchInput" class="form-control form-control-sm bg-gray-800 border-gray-600 text-white" 
+                       placeholder="Search medicines..." style="width: 250px;">
+            </div>
+        </div>
+        <div class="card-body">
+            {% if medicines %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover" id="medicinesTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Medicine Name</th>
+                                <th>Category</th>
+                                <th>Available Quantity</th>
+                                <th>Unit Price (RWF)</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for medicine in medicines %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <strong>{{ medicine.item.name }}</strong>
+                                    {% if medicine.item.description %}
+                                    <br><small class="text-gray-400">{{ medicine.item.description|truncatewords:10 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ medicine.item.category|default:"N/A" }}</span>
+                                </td>
+                                <td>
+                                    <strong class="{% if medicine.qty_available <= 5 %}text-danger{% elif medicine.qty_available <= 10 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ medicine.qty_available }} {{ medicine.item.unit|default:"units" }}
+                                    </strong>
+                                </td>
+                                <td>{{ medicine.unit_price|floatformat:0 }}</td>
+                                <td>
+                                    {% if medicine.expiry_date %}
+                                        {{ medicine.expiry_date|date:"Y-m-d" }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if medicine.qty_available == 0 %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    {% elif medicine.qty_available <= 5 %}
+                                        <span class="badge bg-danger">Critical</span>
+                                    {% elif medicine.qty_available <= 10 %}
+                                        <span class="badge bg-warning">Low Stock</span>
+                                    {% else %}
+                                        <span class="badge bg-success">In Stock</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-pills fa-3x text-gray-600 mb-3"></i>
+                    <p class="text-gray-400">No medicines found in inventory</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-purple-400 { color: #c084fc; }
+    .border-purple-500 { border-color: #a855f7 !important; }
+    .bg-gray-800 { background-color: #1f2937; }
+    .border-gray-600 { border-color: #4b5563; }
+    .border-gray-700 { border-color: #374151; }
+    .text-gray-400 { color: #9ca3af; }
+    .text-gray-600 { color: #6b7280; }
+</style>
+
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        var input = this.value.toLowerCase();
+        var table = document.getElementById('medicinesTable');
+        var rows = table.getElementsByTagName('tr');
+        
+        for (var i = 1; i < rows.length; i++) {
+            var row = rows[i];
+            var text = row.textContent.toLowerCase();
+            
+            if (text.indexOf(input) > -1) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+</script>
+{% endblock %}

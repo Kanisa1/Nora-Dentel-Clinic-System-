@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | Nora Dental Clinic{% endblock %}
+
+{% block branding %}
+<div class="nora-admin-branding">
+    <a href="{% url 'admin:index' %}" class="nora-brand-link">
+        <img src="{% static 'images/logo.png' %}" alt="Nora Dental Clinic" class="nora-logo">
+        <div class="nora-brand-text">
+            <h1 class="nora-clinic-name">Nora Dental Clinic</h1>
+            <p class="nora-admin-subtitle">Administration Portal</p>
+        </div>
+    </a>
+</div>
+{% endblock %}
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin-theme.css' %}">
+{% endblock %}
+
+{% block footer %}
+<div id="footer">
+    <p>
+        <strong>Nora Dental Clinic</strong> - Management System © {% now "Y" %}
+        <br>
+        Professional Healthcare Administration
+    </p>
+</div>
+{% endblock %}

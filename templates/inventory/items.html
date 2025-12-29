@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory Items - Nora Dental Clinic{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <div class="hero-icon-wrapper">
+                <div class="hero-icon-bg"></div>
+                <i class="fas fa-boxes hero-icon"></i>
+            </div>
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    Inventory Items
+                    <span class="hero-badge">Dashboard</span>
+                </h1>
+                <p class="hero-subtitle">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Manage all inventory items, consumables, and equipment
+                </p>
+            </div>
+        </div>
+        <div class="hero-decoration">
+            <div class="decoration-circle circle-1"></div>
+            <div class="decoration-circle circle-2"></div>
+            <div class="decoration-circle circle-3"></div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4 col-md-6">
+            <div class="stats-card stats-card-primary">
+                <div class="stats-card-inner">
+                    <div class="stats-icon-wrapper">
+                        <div class="stats-icon-bg"></div>
+                        <i class="fas fa-box stats-icon"></i>
+                    </div>
+                    <div class="stats-content">
+                        <p class="stats-label">Total Items</p>
+                        <h3 class="stats-value">{{ total_items }}</h3>
+                        <div class="stats-indicator">
+                            <i class="fas fa-cube me-1"></i>
+                            <span>All inventory</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-decoration"></div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="stats-card stats-card-success">
+                <div class="stats-card-inner">
+                    <div class="stats-icon-wrapper">
+                        <div class="stats-icon-bg"></div>
+                        <i class="fas fa-pills stats-icon"></i>
+                    </div>
+                    <div class="stats-content">
+                        <p class="stats-label">Consumables</p>
+                        <h3 class="stats-value">{{ total_consumables }}</h3>
+                        <div class="stats-indicator">
+                            <i class="fas fa-capsules me-1"></i>
+                            <span>Medical supplies</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-decoration"></div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="stats-card stats-card-warning">
+                <div class="stats-card-inner">
+                    <div class="stats-icon-wrapper">
+                        <div class="stats-icon-bg"></div>
+                        <i class="fas fa-tools stats-icon"></i>
+                    </div>
+                    <div class="stats-content">
+                        <p class="stats-label">Fixed Assets</p>
+                        <h3 class="stats-value">{{ total_assets }}</h3>
+                        <div class="stats-indicator">
+                            <i class="fas fa-wrench me-1"></i>
+                            <span>Equipment</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-decoration"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs-wrapper mb-4">
+        <ul class="filter-tabs" id="itemTabs" role="tablist">
+            <li class="filter-tab-item" role="presentation">
+                <button class="filter-tab active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button">
+                    <i class="fas fa-list me-2"></i>
+                    All Items
+                </button>
+            </li>
+            <li class="filter-tab-item" role="presentation">
+                <button class="filter-tab" id="consumables-tab" data-bs-toggle="tab" data-bs-target="#consumables" type="button">
+                    <i class="fas fa-pills me-2"></i>
+                    Consumables
+                </button>
+            </li>
+            <li class="filter-tab-item" role="presentation">
+                <button class="filter-tab" id="assets-tab" data-bs-toggle="tab" data-bs-target="#assets" type="button">
+                    <i class="fas fa-tools me-2"></i>
+                    Fixed Assets
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="itemTabContent">
+        <!-- All Items Tab -->
+        <div class="tab-pane fade show active" id="all" role="tabpanel">
+            <div class="content-card">
+                <div class="content-card-header">
+                    <div class="content-card-title">
+                        <i class="fas fa-list me-2"></i>
+                        All Inventory Items
+                    </div>
+                </div>
+                <div class="content-card-body">
+                    {% if all_items %}
+                        <div class="table-responsive">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-hashtag me-1"></i> #</th>
+                                        <th><i class="fas fa-tag me-1"></i> Item Name</th>
+                                        <th><i class="fas fa-layer-group me-1"></i> Category</th>
+                                        <th><i class="fas fa-balance-scale me-1"></i> Unit</th>
+                                        <th><i class="fas fa-info-circle me-1"></i> Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in all_items %}
+                                    <tr>
+                                        <td><span class="row-number">{{ forloop.counter }}</span></td>
+                                        <td><strong class="item-name">{{ item.name }}</strong></td>
+                                        <td>
+                                            <span class="category-badge">{{ item.category|default:"General" }}</span>
+                                        </td>
+                                        <td><span class="unit-text">{{ item.unit|default:"unit" }}</span></td>
+                                        <td class="description-text">{{ item.description|truncatewords:15|default:"N/A" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No items found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumables Tab -->
+        <div class="tab-pane fade" id="consumables" role="tabpanel">
+            <div class="content-card">
+                <div class="content-card-header">
+                    <div class="content-card-title">
+                        <i class="fas fa-pills me-2"></i>
+                        Consumable Items
+                    </div>
+                </div>
+                <div class="content-card-body">
+                    {% if consumables %}
+                        <div class="table-responsive">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-hashtag me-1"></i> #</th>
+                                        <th><i class="fas fa-tag me-1"></i> Item Name</th>
+                                        <th><i class="fas fa-box me-1"></i> In Stock</th>
+                                        <th><i class="fas fa-exclamation-triangle me-1"></i> Min Level</th>
+                                        <th><i class="fas fa-money-bill-wave me-1"></i> Unit Cost</th>
+                                        <th><i class="fas fa-calendar-times me-1"></i> Expiry Date</th>
+                                        <th><i class="fas fa-info-circle me-1"></i> Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for consumable in consumables %}
+                                    <tr>
+                                        <td><span class="row-number">{{ forloop.counter }}</span></td>
+                                        <td><strong class="item-name">{{ consumable.inventory_item.name }}</strong></td>
+                                        <td><span class="stock-badge">{{ consumable.quantity_in_stock }}</span></td>
+                                        <td>{{ consumable.minimum_stock_level }}</td>
+                                        <td><span class="price-text">{{ consumable.average_unit_cost|floatformat:0 }} RWF</span></td>
+                                        <td>
+                                            {% if consumable.expiry_date %}
+                                                <span class="date-text">{{ consumable.expiry_date|date:"Y-m-d" }}</span>
+                                            {% else %}
+                                                <span class="na-text">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if consumable.quantity_in_stock <= consumable.minimum_stock_level %}
+                                                <span class="status-badge status-warning">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>Low Stock
+                                                </span>
+                                            {% else %}
+                                                <span class="status-badge status-success">
+                                                    <i class="fas fa-check-circle me-1"></i>In Stock
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No consumables found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Fixed Assets Tab -->
+        <div class="tab-pane fade" id="assets" role="tabpanel">
+            <div class="content-card">
+                <div class="content-card-header">
+                    <div class="content-card-title">
+                        <i class="fas fa-tools me-2"></i>
+                        Fixed Assets / Equipment
+                    </div>
+                </div>
+                <div class="content-card-body">
+                    {% if assets %}
+                        <div class="table-responsive">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-hashtag me-1"></i> #</th>
+                                        <th><i class="fas fa-barcode me-1"></i> Asset Code</th>
+                                        <th><i class="fas fa-info-circle me-1"></i> Description</th>
+                                        <th><i class="fas fa-layer-group me-1"></i> Type</th>
+                                        <th><i class="fas fa-calendar-alt me-1"></i> Purchase Date</th>
+                                        <th><i class="fas fa-money-bill-wave me-1"></i> Cost</th>
+                                        <th><i class="fas fa-signal me-1"></i> Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for asset in assets %}
+                                    <tr>
+                                        <td><span class="row-number">{{ forloop.counter }}</span></td>
+                                        <td><strong class="item-name">{{ asset.asset_code }}</strong></td>
+                                        <td class="description-text">{{ asset.description|truncatewords:10 }}</td>
+                                        <td>
+                                            <span class="category-badge">{{ asset.asset_type|default:"Equipment" }}</span>
+                                        </td>
+                                        <td><span class="date-text">{{ asset.purchase_date|date:"Y-m-d" }}</span></td>
+                                        <td><span class="price-text">{{ asset.purchase_cost|floatformat:0 }} RWF</span></td>
+                                        <td>
+                                            {% if asset.status == 'active' %}
+                                                <span class="status-badge status-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Active
+                                                </span>
+                                            {% elif asset.status == 'maintenance' %}
+                                                <span class="status-badge status-warning">
+                                                    <i class="fas fa-wrench me-1"></i>Maintenance
+                                                </span>
+                                            {% elif asset.status == 'damaged' %}
+                                                <span class="status-badge status-danger">
+                                                    <i class="fas fa-times-circle me-1"></i>Damaged
+                                                </span>
+                                            {% else %}
+                                                <span class="status-badge status-secondary">{{ asset.status|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No fixed assets found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-blue-400 { color: #60a5fa; }
+    .border-gray-700 { border-color: #374151 !important; }
+    .text-gray-400 { color: #9ca3af; }
+    .nav-tabs .nav-link {
+        color: #9ca3af;
+        background-color: #1f2937;
+        border: 1px solid #374151;
+    }
+    .nav-tabs .nav-link.active {
+        color: #fff;
+        background-color: #374151;
+        border-color: #4b5563;
+    }
+</style>
+{% endblock %}

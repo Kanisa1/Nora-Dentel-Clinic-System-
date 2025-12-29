@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dispensing - Nora Dental Clinic{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="dashboard-header mb-4">
+        <h1 class="dashboard-title">
+            <i class="fas fa-prescription-bottle-alt me-3"></i>
+            Medication Dispensing
+        </h1>
+        <p class="dashboard-subtitle">Dispense medications and track dispensing activity in real-time</p>
+    </div>
+
+    <!-- Modern Summary Cards -->
+    <div class="metrics-grid mb-5">
+        <div class="metric-card metric-card-gradient-1">
+            <div class="metric-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Today's Dispensing</div>
+                <div class="metric-value">{{ today_count|default:0 }}</div>
+                <div class="metric-subtitle">Completed today</div>
+            </div>
+        </div>
+
+        <div class="metric-card metric-card-gradient-2">
+            <div class="metric-icon">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Pending</div>
+                <div class="metric-value">{{ pending_count|default:0 }}</div>
+                <div class="metric-subtitle">Awaiting dispensing</div>
+            </div>
+        </div>
+
+        <div class="metric-card metric-card-gradient-3">
+            <div class="metric-icon">
+                <i class="fas fa-calendar-week"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">This Week</div>
+                <div class="metric-value">{{ week_count|default:0 }}</div>
+                <div class="metric-subtitle">Last 7 days</div>
+            </div>
+        </div>
+
+        <div class="metric-card metric-card-gradient-4">
+            <div class="metric-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">This Month</div>
+                <div class="metric-value">{{ month_count|default:0 }}</div>
+                <div class="metric-subtitle">Last 30 days</div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Pending Prescriptions -->
+    <div class="data-table-card card-warning mb-4">
+        <div class="table-card-header">
+            <h5 class="table-title">
+                <i class="fas fa-file-prescription text-warning me-2"></i>
+                Pending Prescriptions
+                <span class="ms-2 text-muted" style="font-size: 0.9rem;">({{ pending_prescriptions|length }} waiting)</span>
+            </h5>
+            <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Search prescriptions..." id="searchPending">
+            </div>
+        </div>
+        <div class="table-card-body">
+            {% if pending_prescriptions %}
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Prescription ID</th>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Date & Time</th>
+                                <th>Type</th>
+                                <th>Items</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prescription in pending_prescriptions %}
+                            <tr class="table-row-hover">
+                                <td>
+                                    <span class="prescription-id">#{{ prescription.id|stringformat:"05d" }}</span>
+                                </td>
+                                <td>
+                                    <div class="patient-info">
+                                        <div class="patient-name">{{ prescription.patient.first_name }} {{ prescription.patient.last_name }}</div>
+                                        <div class="patient-id">ID: {{ prescription.patient.patient_id }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="doctor-name">Dr. {{ prescription.doctor.user.get_full_name }}</div>
+                                </td>
+                                <td>
+                                    <div class="date-info">
+                                        <div class="date-primary">{{ prescription.created_at|date:"M d, Y" }}</div>
+                                        <div class="date-secondary">{{ prescription.created_at|date:"h:i A" }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="type-badge">{{ prescription.prescription_type|title }}</span>
+                                </td>
+                                <td>
+                                    <span class="items-count">
+                                        <i class="fas fa-pills me-1"></i>
+                                        {{ prescription.items.count }} items
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn-primary" onclick="viewPrescription({{ prescription.id }})">
+                                            <i class="fas fa-pills me-2"></i>Dispense Now
+                                        </button>
+                                        <button class="action-btn-small btn-view" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h5>All Caught Up!</h5>
+                    <p class="text-muted">No pending prescriptions at this time.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Today's Dispensing Activity -->
+    <div class="data-table-card">
+        <div class="table-card-header">
+            <h5 class="table-title">
+                <i class="fas fa-history me-2"></i>
+                Today's Dispensing Activity
+                <span class="ms-2 text-muted" style="font-size: 0.9rem;">({{ today_dispensing|length }} records)</span>
+            </h5>
+            <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Search activity..." id="searchToday">
+                <button class="action-btn btn-export">
+                    <i class="fas fa-download me-2"></i>Export
+                </button>
+            </div>
+        </div>
+        <div class="table-card-body">
+            {% if today_dispensing %}
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Medicine</th>
+                                <th>Quantity</th>
+                                <th>Batch</th>
+                                <th>Dispensed By</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dispense in today_dispensing %}
+                            <tr class="table-row-hover">
+                                <td>
+                                    <span class="time-badge">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ dispense.dispensed_at|time:"H:i" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if dispense.prescription and dispense.prescription.patient %}
+                                        <div class="patient-info">
+                                            <div class="patient-name">{{ dispense.prescription.patient.first_name }} {{ dispense.prescription.patient.last_name }}</div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="medicine-name">{{ dispense.pharmacy_stock.item.name }}</div>
+                                </td>
+                                <td>
+                                    <div class="quantity-display">
+                                        <span class="qty-number">{{ dispense.quantity_dispensed }}</span>
+                                        <span class="qty-unit">{{ dispense.pharmacy_stock.item.unit|default:"units" }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="batch-badge">{{ dispense.pharmacy_stock.batch_number|default:"N/A" }}</span>
+                                </td>
+                                <td>
+                                    {% if dispense.dispensed_by %}
+                                        <span class="pharmacist-info">{{ dispense.dispensed_by.get_full_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">System</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge status-success">
+                                        <i class="fas fa-check me-1"></i>Completed
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-info-circle fa-4x mb-3"></i>
+                    <h5>No Activity Today</h5>
+                    <p class="text-muted">No dispensing activity recorded today.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Dashboard Header */
+    .dashboard-header { text-align: center; margin-bottom: 2rem; }
+    .dashboard-title { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; }
+    .dashboard-subtitle { color: #9ca3af; font-size: 1rem; }
+
+    /* Modern Metrics Grid */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .metric-card { background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; position: relative; overflow: hidden; }
+    .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; transition: opacity 0.3s ease; z-index: 0; }
+    .metric-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+    .metric-card:hover::before { opacity: 1; }
+    .metric-card-gradient-1::before { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%); }
+    .metric-card-gradient-2::before { background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%); }
+    .metric-card-gradient-3::before { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); }
+    .metric-card-gradient-4::before { background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%); }
+    .metric-icon { width: 70px; height: 70px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 2rem; flex-shrink: 0; position: relative; z-index: 1; }
+    .metric-card-gradient-1 .metric-icon { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+    .metric-card-gradient-2 .metric-icon { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; }
+    .metric-card-gradient-3 .metric-icon { background: linear-gradient(135deg, #3b82f6 0%, #9333ea 100%); color: white; }
+    .metric-card-gradient-4 .metric-icon { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; }
+    .metric-content { flex: 1; position: relative; z-index: 1; }
+    .metric-label { font-size: 0.875rem; color: #9ca3af; margin-bottom: 0.5rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-value { font-size: 2.5rem; font-weight: 700; color: white; line-height: 1; margin-bottom: 0.5rem; }
+    .metric-subtitle { font-size: 0.75rem; color: #6b7280; }
+
+    /* Data Table Card */
+    .data-table-card { background: rgba(255, 255, 255, 0.03); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: visible; min-height: 400px; display: block !important; }
+    .card-warning { border-color: rgba(251, 191, 36, 0.3); }
+    .table-card-header { padding: 20px 25px; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+    .table-title { margin: 0; font-size: 1.25rem; font-weight: 600; color: white; display: flex; align-items: center; }
+    .table-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .search-input { padding: 8px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white; font-size: 0.875rem; min-width: 250px; transition: all 0.3s ease; }
+    .search-input:focus { outline: none; border-color: #667eea; background: rgba(255, 255, 255, 0.08); }
+    .search-input::placeholder { color: #6b7280; }
+    .action-btn { padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; }
+    .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+    .btn-export { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .btn-export:hover { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+    .table-card-body { padding: 0; display: block !important; }
+
+    /* Modern Table */
+    .modern-table { width: 100%; border-collapse: separate; border-spacing: 0; display: table !important; }
+    .modern-table thead { background: rgba(255, 255, 255, 0.05); display: table-header-group !important; }
+    .modern-table tbody { display: table-row-group !important; }
+    .modern-table thead th { padding: 16px 20px; text-align: left; font-weight: 600; font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .modern-table tbody tr { transition: all 0.2s ease; display: table-row !important; }
+    .table-row-hover:hover { background: rgba(255, 255, 255, 0.05); }
+    .modern-table tbody td { padding: 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #e5e7eb; font-size: 0.875rem; }
+
+    /* Table Content Styling */
+    .prescription-id { font-family: 'Courier New', monospace; font-weight: 700; color: #667eea; font-size: 0.9rem; }
+    .patient-info .patient-name { color: white; font-weight: 500; margin-bottom: 2px; }
+    .patient-info .patient-id { color: #6b7280; font-size: 0.75rem; }
+    .doctor-name { color: #e5e7eb; font-weight: 500; }
+    .date-info .date-primary { color: white; font-weight: 500; }
+    .date-info .date-secondary { color: #6b7280; font-size: 0.75rem; margin-top: 2px; }
+    .type-badge { padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+    .items-count { color: #9ca3af; font-weight: 500; }
+    .time-badge { color: #9ca3af; font-size: 0.875rem; }
+    .medicine-name { color: white; font-weight: 500; }
+    .quantity-display { display: flex; align-items: baseline; gap: 4px; }
+    .qty-number { font-size: 1.1rem; font-weight: 600; color: white; }
+    .qty-unit { font-size: 0.75rem; color: #9ca3af; }
+    .batch-badge { padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    .pharmacist-info { color: #9ca3af; font-size: 0.875rem; }
+    .status-badge { padding: 6px 14px; border-radius: 14px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .status-success { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    /* Action Buttons */
+    .action-buttons { display: flex; gap: 8px; align-items: center; }
+    .action-btn-small { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: #9ca3af; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; font-size: 0.875rem; }
+    .action-btn-small:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateY(-2px); }
+    .btn-view:hover { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-color: #3b82f6; }
+    .action-btn-primary { padding: 8px 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; border-radius: 8px; color: white; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
+    .action-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 60px 20px; color: #6b7280; }
+    .empty-state i { color: #4b5563; margin-bottom: 1rem; }
+    .empty-state h5 { color: #9ca3af; margin-bottom: 0.5rem; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .metrics-grid { grid-template-columns: 1fr; }
+        .table-card-header { flex-direction: column; align-items: stretch; }
+        .table-actions { flex-direction: column; }
+        .search-input { min-width: 100%; }
+    }
+</style>
+
+<script>
+    function viewPrescription(prescriptionId) {
+        alert('Viewing prescription #' + prescriptionId + '\nThis feature will open prescription details and dispensing form.');
+        // TODO: Implement prescription details modal or navigation
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        ['searchPending', 'searchToday'].forEach(id => {
+            const searchInput = document.getElementById(id);
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const table = e.target.closest('.table-card-body').querySelector('table');
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(searchTerm) ? '' : 'none';
+                    });
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

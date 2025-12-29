@@ -1,0 +1,158 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Today's Appointments - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-calendar-check"></i> Today's Queue
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'reception_dashboard' %}" class="nav-link">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_today_appointments' %}" class="nav-link active">
+            <i class="fas fa-clock"></i> Today's Queue
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Manage today's patient queue</div>
+
+    <div class="table-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 class="table-title" style="margin-bottom: 0;">Today's Queue</h3>
+            <button class="btn btn-primary" onclick="window.print()" style="padding: 8px 15px; font-size: 12px;">
+                <i class="fas fa-print"></i> Print Queue
+            </button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Position</th>
+                    <th>Patient Name</th>
+                    <th>Phone</th>
+                    <th>Doctor</th>
+                    <th>Checked In</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for queue in today_queue %}
+                    <tr>
+                        <td><strong>#{{ queue.position }}</strong></td>
+                        <td>{{ queue.visit.patient.first_name }} {{ queue.visit.patient.last_name }}</td>
+                        <td>{{ queue.visit.patient.phone }}</td>
+                        <td>
+                            {% if queue.visit.doctor %}
+                                {{ queue.visit.doctor.user.get_full_name|default:queue.visit.doctor.user.username }}
+                            {% else %}
+                                Unassigned
+                            {% endif %}
+                        </td>
+                        <td>{{ queue.checked_in_at|time:"H:i" }}</td>
+                        <td>
+                            {% if queue.status == 'waiting' %}
+                                <span class="badge badge-warning">Waiting</span>
+                            {% elif queue.status == 'in_consultation' %}
+                                <span class="badge badge-info">Consulting</span>
+                            {% else %}
+                                <span class="badge badge-success">Done</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-small btn-view" onclick="callPatient({{ queue.id }})">Call</button>
+                                <button class="btn-small btn-edit" onclick="updateStatus({{ queue.id }})">Update</button>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #999;">No patients in queue today</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function callPatient(queueId) {
+    if (confirm('Call this patient to the consultation room?')) {
+        // Update status to in_consultation
+        fetch(`/reception/queue/${queueId}/call/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || 'Patient called successfully!');
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to call patient');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while calling the patient');
+        });
+    }
+}
+
+function updateStatus(queueId) {
+    const newStatus = prompt('Enter new status (waiting/in_consultation/finished):');
+    if (newStatus && ['waiting', 'in_consultation', 'finished'].includes(newStatus)) {
+        fetch(`/reception/queue/${queueId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || 'Status updated successfully!');
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to update status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating status');
+        });
+    } else if (newStatus) {
+        alert('Invalid status. Please use: waiting, in_consultation, or finished');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

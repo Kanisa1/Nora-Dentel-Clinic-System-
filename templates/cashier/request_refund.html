@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Refund - Cashier{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">
+                    <i class="fas fa-undo mr-2 text-yellow-600"></i>Request Refund
+                </h1>
+                <p class="text-gray-600 mt-1">Process refund for paid invoices</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'refund_list' %}" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-list mr-2"></i>View Refunds
+                </a>
+                <a href="{% url 'cashier_dashboard' %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Form -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        <div class="bg-gradient-to-r from-yellow-600 to-orange-600 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white">
+                <i class="fas fa-file-invoice-dollar mr-2"></i>Refund Details
+            </h2>
+        </div>
+        
+        <div class="p-6">
+            <form method="POST" id="refundForm">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Invoice Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Select Invoice <span class="text-red-500">*</span>
+                        </label>
+                        <select name="invoice_id" id="invoiceSelect" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <option value="">-- Select Invoice --</option>
+                            {% for invoice in invoices %}
+                            <option value="{{ invoice.id }}" 
+                                    data-private="{{ invoice.total_private }}" 
+                                    data-insurance="{{ invoice.total_insurance }}"
+                                    data-patient="{{ invoice.visit.patient.first_name }} {{ invoice.visit.patient.last_name }}"
+                                    data-receipt="{{ invoice.receipt_number }}">
+                                {{ invoice.receipt_number }} - {{ invoice.visit.patient.first_name }} {{ invoice.visit.patient.last_name }} 
+                                ({{ invoice.total_private|add:invoice.total_insurance|floatformat:0 }} RWF)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Refund Amount -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Refund Amount (RWF) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" name="amount" id="refundAmount" required min="1" step="0.01"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                               placeholder="Enter refund amount">
+                        <p class="text-sm text-gray-500 mt-1">Max: <span id="maxAmount">0</span> RWF</p>
+                    </div>
+                </div>
+
+                <!-- Invoice Details Display -->
+                <div id="invoiceDetails" class="bg-blue-50 p-4 rounded-lg mb-6 hidden">
+                    <h3 class="font-semibold text-blue-900 mb-3">Invoice Details</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Receipt #:</span>
+                            <p class="font-semibold" id="detailReceipt">-</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Patient:</span>
+                            <p class="font-semibold" id="detailPatient">-</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Private:</span>
+                            <p class="font-semibold" id="detailPrivate">-</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Insurance:</span>
+                            <p class="font-semibold" id="detailInsurance">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reason -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Reason for Refund <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="reason" required rows="4"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                              placeholder="Provide detailed reason for the refund request..."></textarea>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex gap-4">
+                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3 rounded-lg font-semibold">
+                        <i class="fas fa-check mr-2"></i>Submit Refund Request
+                    </button>
+                    <a href="{% url 'cashier_dashboard' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-8 py-3 rounded-lg font-semibold">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('invoiceSelect').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const invoiceDetails = document.getElementById('invoiceDetails');
+    const refundAmountInput = document.getElementById('refundAmount');
+    
+    if (this.value) {
+        const privateAmount = parseFloat(selectedOption.dataset.private || 0);
+        const insuranceAmount = parseFloat(selectedOption.dataset.insurance || 0);
+        const totalAmount = privateAmount + insuranceAmount;
+        
+        // Update invoice details
+        document.getElementById('detailReceipt').textContent = selectedOption.dataset.receipt || '-';
+        document.getElementById('detailPatient').textContent = selectedOption.dataset.patient || '-';
+        document.getElementById('detailPrivate').textContent = privateAmount.toFixed(0) + ' RWF';
+        document.getElementById('detailInsurance').textContent = insuranceAmount.toFixed(0) + ' RWF';
+        document.getElementById('maxAmount').textContent = totalAmount.toFixed(0);
+        
+        // Set max amount for refund
+        refundAmountInput.max = totalAmount;
+        refundAmountInput.value = totalAmount;
+        
+        invoiceDetails.classList.remove('hidden');
+    } else {
+        invoiceDetails.classList.add('hidden');
+        refundAmountInput.value = '';
+        refundAmountInput.max = '';
+    }
+});
+
+// Form validation
+document.getElementById('refundForm').addEventListener('submit', function(e) {
+    const refundAmount = parseFloat(document.getElementById('refundAmount').value);
+    const maxAmount = parseFloat(document.getElementById('refundAmount').max);
+    
+    if (refundAmount > maxAmount) {
+        e.preventDefault();
+        alert('Refund amount cannot exceed the invoice total of ' + maxAmount.toFixed(0) + ' RWF');
+    }
+});
+</script>
+{% endblock %}

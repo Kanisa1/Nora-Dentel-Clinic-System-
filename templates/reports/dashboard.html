@@ -1,0 +1,200 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Reports Dashboard - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-chart-bar"></i> Reports Dashboard
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'reports_dashboard' %}" class="nav-link active">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reports_daily' %}" class="nav-link">
+            <i class="fas fa-calendar-day"></i> Daily Report
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reports_monthly' %}" class="nav-link">
+            <i class="fas fa-calendar-alt"></i> Monthly Report
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reports_analytics' %}" class="nav-link">
+            <i class="fas fa-chart-pie"></i> Analytics
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reports_export' %}" class="nav-link">
+            <i class="fas fa-download"></i> Export
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Comprehensive clinic analytics and reporting</div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_visits }}</div>
+            <div class="stat-label">Total Visits</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ total_patients }}</div>
+            <div class="stat-label">Total Patients</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">{{ repeat_patients_pct }}</div>
+            <div class="stat-label">Return Patients %</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ avg_visit_time }}</div>
+            <div class="stat-label">Avg Visit Time (min)</div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px;">
+        <!-- Top Treatments -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-tooth"></i> Top Treatments
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Treatment</th>
+                        <th>Count</th>
+                        <th>Revenue</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for treatment in top_treatments %}
+                        <tr>
+                            <td><strong>{{ treatment.name }}</strong></td>
+                            <td>{{ treatment.count }}</td>
+                            <td>{{ treatment.revenue }} RWF</td>
+                            <td>{{ treatment.percentage }}%</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">No data</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visit Statistics -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-chart-bar"></i> Visit Statistics
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Visits</th>
+                        <th>New Patients</th>
+                        <th>Return Patients</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in visit_stats %}
+                        <tr>
+                            <td><strong>{{ stat.department }}</strong></td>
+                            <td>{{ stat.visits }}</td>
+                            <td>{{ stat.new_patients }}</td>
+                            <td>{{ stat.return_patients }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">No data</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Patient Demographics -->
+    <div class="table-container" style="margin-top: 30px;">
+        <h3 class="table-title">
+            <i class="fas fa-users"></i> Patient Demographics
+        </h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Male</th>
+                    <th>Female</th>
+                    <th>Other</th>
+                    <th>Total</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for demo in demographics %}
+                    <tr>
+                        <td><strong>{{ demo.age_group }}</strong></td>
+                        <td>{{ demo.male }}</td>
+                        <td>{{ demo.female }}</td>
+                        <td>{{ demo.other }}</td>
+                        <td>{{ demo.total }}</td>
+                        <td>{{ demo.percentage }}%</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #999;">No data</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="table-container" style="margin-top: 30px;">
+        <h3 class="table-title">
+            <i class="fas fa-bolt"></i> Quick Actions
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <button class="btn btn-primary" onclick="generateDaily()" style="width: 100%; padding: 15px;">
+                <i class="fas fa-calendar-day"></i> Daily Report
+            </button>
+            <button class="btn btn-primary" onclick="generateMonthly()" style="width: 100%; padding: 15px;">
+                <i class="fas fa-calendar-alt"></i> Monthly Report
+            </button>
+            <button class="btn btn-primary" onclick="generateCustom()" style="width: 100%; padding: 15px;">
+                <i class="fas fa-filter"></i> Custom Report
+            </button>
+            <button class="btn btn-primary" onclick="exportPDF()" style="width: 100%; padding: 15px;">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function generateDaily() {
+    window.location.href = "{% url 'reports_daily' %}";
+}
+
+function generateMonthly() {
+    window.location.href = "{% url 'reports_monthly' %}";
+}
+
+function generateCustom() {
+    alert('Custom Report feature coming soon');
+}
+
+function exportPDF() {
+    alert('Export PDF feature coming soon');
+}
+</script>
+{% endblock %}

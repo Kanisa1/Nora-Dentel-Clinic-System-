@@ -1,0 +1,519 @@
+{% extends 'doctor/base_doctor.html' %}
+{% load static %}
+
+{% block title %}Clinical Command Center - Nora Dental Clinic{% endblock %}
+{% block page_title %}Doctor Workspace{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --card-radius: 28px;
+        --card-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+        --teal: #0fb8ad;
+        --indigo: #6366f1;
+        --orange: #ff9f43;
+    }
+    .dashboard-shell { background: #f4fbff; }
+    .glass-card { border-radius: var(--card-radius); border: 1px solid rgba(15,23,42,0.06); background: #fff; padding: 2rem; box-shadow: var(--card-shadow); position: relative; overflow: hidden; }
+    .card-title { font-size: 1rem; font-weight: 700; color: #0f172a; }
+    .card-subtitle { font-size: 0.9rem; color: #64748b; }
+    .avatar-ring { height: 72px; width: 72px; background: linear-gradient(135deg, #6ee7b7, #0ea5e9); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1.75rem; box-shadow: inset 0 0 0 4px rgba(255,255,255,0.45); }
+    .stat-pill { border-radius: 18px; background: #f8fafc; padding: 0.9rem 1rem; }
+    .stat-pill h4 { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+    .chip { border-radius: 999px; border: 1px solid rgba(15,23,42,0.08); padding: 0.35rem 1rem; font-size: 0.8rem; font-weight: 600; color: #475569; }
+    .chart-canvas { height: 260px; }
+    .calendar-head { display: flex; align-items: flex-start; justify-content: space-between; }
+    .calendar-monthline { margin-top: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .calendar-month-meta { text-align: left; }
+    .calendar-month-meta .month { font-size: 1.75rem; font-weight: 700; color: #0f172a; }
+    .calendar-month-meta .year { font-size: 1rem; color: #94a3b8; margin-top: 0.25rem; }
+    .calendar-weekdays { margin-top: 1.5rem; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; text-align: center; }
+    .calendar-grid { margin-top: 0.75rem; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 0.75rem; column-gap: 0.25rem; }
+    .calendar-day { text-align: center; color: #0f172a; font-weight: 600; position: relative; }
+    .calendar-day .day-number { width: 38px; height: 38px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto; }
+    .calendar-day.outside-month { color: #cbd5f5; }
+    .calendar-day.has-event .day-number { border: 1px solid #0fb8ad; }
+    .calendar-day.is-today .day-number { background: #0fb8ad; color: #fff; box-shadow: 0 10px 25px rgba(15,184,173,0.35); }
+    .progress-track { height: 10px; border-radius: 999px; background: rgba(226,232,240,0.8); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #0fb8ad, #2dd4bf); }
+    .management-row + .management-row { margin-top: 1rem; }
+    .management-row h4 { font-size: 0.9rem; font-weight: 600; color: #0f172a; }
+    .management-row span { font-size: 0.8rem; color: #64748b; }
+    .info-card { background: linear-gradient(135deg, #eef2ff, #fef3f2); }
+    .action-btn { border-radius: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.9rem 1.4rem; transition: transform 150ms ease, box-shadow 150ms ease; }
+    .action-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(15,23,42,0.15); }
+    .action-btn.primary { background: #0f172a; color: #fff; }
+    .action-btn.secondary { border: 1px solid rgba(15,23,42,0.12); color: #0f172a; background: #fff; }
+    .chart-legend { display: flex; gap: 1rem; font-size: 0.8rem; color: #475569; }
+    .chart-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-flex; }
+    .hero-card { border-radius: 32px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; padding: 2.5rem; box-shadow: 0 30px 80px rgba(60, 12, 153, 0.35); }
+    .hero-card::after { content: ""; position: absolute; inset: 1.5rem; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); pointer-events: none; }
+    .hero-content { position: relative; display: flex; flex-direction: column; gap: 1.5rem; }
+    .hero-header { display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
+    .hero-header-left { display: flex; flex-direction: column; gap: 0.8rem; }
+    .hero-header .avatar-ring { border-radius: 24px; width: auto; height: auto; padding: 0.75rem 1.4rem; font-size: 1.2rem; justify-content: flex-start; background: rgba(255,255,255,0.18); box-shadow: none; }
+    .hero-header h1 { font-size: 2.4rem; font-weight: 700; }
+    .hero-meta { font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; opacity: 0.85; }
+    .hero-description { font-size: 0.95rem; max-width: 32rem; line-height: 1.6; opacity: 0.9; }
+    .hero-footer { display: flex; flex-wrap: wrap; gap: 1rem; align-items: stretch; justify-content: space-between; }
+    .hero-date { background: rgba(255,255,255,0.18); border-radius: 22px; padding: 1rem 1.5rem; min-width: 220px; text-align: right; margin-left: auto; }
+    .hero-date p { margin: 0; }
+    .hero-date .day { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.75rem; opacity: 0.8; }
+    .hero-date .date { font-size: 1.6rem; font-weight: 700; }
+    .hero-date .time { font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; justify-content: flex-end; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .hero-actions .action-btn { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.35); color: #fff; }
+    .hero-actions .action-btn:hover { box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+    .summary-grid { gap: 1.25rem; }
+    .summary-card { border-radius: 24px; padding: 1.5rem; box-shadow: 0 15px 35px rgba(15,23,42,0.08); background: #fff; border: 1px solid rgba(15,23,42,0.04); }
+    .summary-label { font-size: 0.9rem; color: #64748b; font-weight: 600; }
+    .summary-value { font-size: 2.2rem; font-weight: 700; color: #0f172a; margin-top: 0.4rem; }
+    .summary-caption { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; }
+    .patient-management-bars { margin-top: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+    .patient-management-row h4 { font-size: 0.9rem; font-weight: 600; color: #0f172a; }
+    .patient-management-row span { font-size: 0.8rem; color: #64748b; }
+    .appointments-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .appointments-table thead { background: #111936; color: #fff; }
+    .appointments-table th { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.85rem 1rem; text-align: left; }
+    .appointments-table tbody tr { background: #fff; }
+    .appointments-table td { padding: 1rem; border-bottom: 1px solid rgba(15,23,42,0.08); font-size: 0.95rem; color: #0f172a; }
+    .appointments-table td .patient-subline { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
+    .appointments-table tbody tr:last-child td { border-bottom: none; }
+    .appointments-table .notes-cell { color: #475569; font-size: 0.9rem; }
+    @media (min-width: 1024px) {
+        .hero-header { flex-direction: row; align-items: center; justify-content: space-between; }
+        .hero-header-left { flex-direction: row; align-items: center; gap: 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-shell min-h-screen -m-6 p-6">
+    <section class="mb-8">
+        <article class="hero-card relative">
+            <div class="hero-content">
+                <div class="hero-header">
+                    <div class="hero-header-left">
+                        <div class="avatar-ring">Doctor portal</div>
+                        <div>
+                            <h1>Dr. {{ doctor_name }}</h1>
+                            <p class="hero-meta">
+                                <i class="fas fa-location-dot"></i>
+                                {{ doctor_department.name|default:"General Dentistry"|upper }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="hero-date">
+                        <p class="day">{{ today|date:"l" }}</p>
+                        <p class="date">{{ today|date:"M d, Y" }}</p>
+                        <p class="time"><i class="far fa-clock"></i>{{ current_moment|date:"h:i:s A" }}</p>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 summary-grid mb-10">
+        <article class="summary-card">
+            <p class="summary-label">Today</p>
+            <p class="summary-value">{{ total_patients_today|default:0 }}</p>
+            <p class="summary-caption">Patients</p>
+        </article>
+        <article class="summary-card">
+            <p class="summary-label">Completed</p>
+            <p class="summary-value text-emerald-500">{{ completed_today|default:0 }}</p>
+            <p class="summary-caption">Consultations</p>
+        </article>
+        <article class="summary-card">
+            <p class="summary-label">Waiting</p>
+            <p class="summary-value text-amber-500">{{ waiting_count|default:0 }}</p>
+            <p class="summary-caption">Ready now</p>
+        </article>
+        <article class="summary-card">
+            <p class="summary-label">Revenue</p>
+            <p class="summary-value text-indigo-500">{{ total_revenue_today|floatformat:0|default:"0" }}</p>
+            <p class="summary-caption">RWF invoiced</p>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <article class="glass-card chart-card lg:col-span-2">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+                <div>
+                    <h3 class="card-title">Health Curve</h3>
+                    <p class="card-subtitle">Consultations throughout {{ today|date:"F j" }}</p>
+                </div>
+                <span class="chip">Updated {{ current_moment|date:"H:i" }}</span>
+            </div>
+            <div class="chart-canvas">
+                <canvas id="healthCurveChart"></canvas>
+            </div>
+            <div class="chart-legend mt-4">
+                <span><span class="legend-dot" style="background:#0fb8ad"></span>Total patients</span>
+                <span><span class="legend-dot" style="background:#6366f1"></span>Completed</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 text-sm text-slate-500">
+                <div>
+                    <p class="uppercase tracking-widest text-xs">Assigned</p>
+                    <p class="text-2xl font-semibold text-slate-900">{{ total_patients_today|default:0 }}</p>
+                </div>
+                <div>
+                    <p class="uppercase tracking-widest text-xs">Completed</p>
+                    <p class="text-2xl font-semibold text-emerald-500">{{ completed_today|default:0 }}</p>
+                </div>
+                <div>
+                    <p class="uppercase tracking-widest text-xs">Waiting now</p>
+                    <p class="text-2xl font-semibold text-amber-500">{{ waiting_count|default:0 }}</p>
+                </div>
+                <div>
+                    <p class="uppercase tracking-widest text-xs">Revenue</p>
+                    <p class="text-2xl font-semibold text-indigo-500">{{ total_revenue_today|floatformat:0|default:"0" }} RWF</p>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+        <article class="glass-card">
+            <div class="calendar-head">
+                <div>
+                    <h3 class="card-title">Nearest treatment</h3>
+                    <p class="card-subtitle">Upcoming appointments from your list</p>
+                </div>
+                <div class="text-right text-sm text-slate-500">
+                    <p>{{ calendar_meta.month }}</p>
+                    <p>{{ calendar_meta.year }}</p>
+                </div>
+            </div>
+            <div class="calendar-monthline">
+                <div class="calendar-month-meta">
+                    <p class="month">{{ calendar_meta.month }}</p>
+                    <p class="year">{{ calendar_meta.year }}</p>
+                </div>
+            </div>
+            <div class="calendar-weekdays">
+                {% for label in calendar_meta.weekdays %}
+                    <span>{{ label }}</span>
+                {% endfor %}
+            </div>
+            <div class="calendar-grid">
+                {% for week in calendar_weeks %}
+                    {% for day in week %}
+                        <div class="calendar-day{% if not day.in_month %} outside-month{% endif %}{% if day.is_today %} is-today{% endif %}{% if day.has_event %} has-event{% endif %}">
+                            <span class="day-number">{{ day.day }}</span>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="glass-card chart-card">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="uppercase tracking-widest text-xs text-slate-400">Appointments</p>
+                    <h3 class="card-title text-3xl">{{ total_weekly|default:0 }}</h3>
+                </div>
+                <span class="chip">7-day trend</span>
+            </div>
+            <div class="chart-canvas">
+                <canvas id="appointmentsChart"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-6 text-sm text-slate-500">
+                <div>
+                    <p class="uppercase tracking-widest text-xs">Completed</p>
+                    <p class="text-xl font-semibold text-emerald-500">{{ weekly_completed|default:0 }}</p>
+                </div>
+                <div>
+                    <p class="uppercase tracking-widest text-xs">Active queue</p>
+                    <p class="text-xl font-semibold text-indigo-500">{{ active_visits|length }}</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="glass-card">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="card-title">Hospital management</h3>
+                    <p class="card-subtitle">Where your workload sits</p>
+                </div>
+                <span class="chip">Daily snapshot</span>
+            </div>
+            {% for item in hospital_management %}
+                <div class="management-row">
+                    <div class="flex items-center justify-between">
+                        <h4>{{ item.label }}</h4>
+                        <span>{{ item.value }} cases</span>
+                    </div>
+                    <div class="progress-track mt-2">
+                        <div class="progress-fill" style="width: {{ item.percent }}%; background: {{ item.gradient }};"></div>
+                    </div>
+                </div>
+            {% endfor %}
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 mb-8">
+        <article class="glass-card">
+            <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-6">
+                <div>
+                    <h3 class="card-title">Upcoming appointments</h3>
+                    <p class="card-subtitle">Next confirmed bookings on your calendar</p>
+                </div>
+                <div class="text-right">
+                    <p class="uppercase tracking-widest text-xs text-slate-400">Scheduled</p>
+                    <p class="text-3xl font-semibold text-slate-900">{{ my_appointments|length }}</p>
+                </div>
+            </div>
+            {% if my_appointments %}
+                <div class="overflow-hidden rounded-2xl border border-slate-100">
+                    <table class="appointments-table w-full">
+                        <thead>
+                            <tr>
+                                <th>Date / Time</th>
+                                <th>Patient</th>
+                                <th>Age</th>
+                                <th>Doctor</th>
+                                <th>Status</th>
+                                <th>Phone</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in my_appointments %}
+                                <tr>
+                                    <td>
+                                        <p class="font-semibold text-slate-900">{{ appointment.scheduled_at|date:"M d, Y" }}</p>
+                                        <p class="patient-subline">{{ appointment.scheduled_at|date:"l" }} • {{ appointment.scheduled_at|date:"h:i A" }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="font-semibold text-slate-900">{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</p>
+                                        <p class="patient-subline">File #{{ appointment.patient.id }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="font-semibold text-slate-900">{{ appointment.patient.age|default:"--" }}</p>
+                                        <p class="patient-subline">yrs</p>
+                                    </td>
+                                    <td>
+                                        {% if appointment.doctor %}
+                                            <p class="font-semibold text-slate-900">Dr. {{ appointment.doctor.user.get_full_name|default:appointment.doctor.user.username }}</p>
+                                            <p class="patient-subline">{{ appointment.doctor.department.name|default:"" }}</p>
+                                        {% else %}
+                                            <p class="font-semibold text-slate-900">Unassigned</p>
+                                            <p class="patient-subline">Awaiting doctor</p>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="chip">{{ appointment.get_status_display }}</span>
+                                    </td>
+                                    <td>
+                                        <p class="font-semibold text-slate-900">{{ appointment.patient.phone|default:"Not provided" }}</p>
+                                        <p class="patient-subline">Created {{ appointment.created_at|date:"M d" }}</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
+                    <p class="text-lg font-semibold text-slate-700">No upcoming appointments yet</p>
+                    <p class="mt-1">Schedule a follow-up from any active visit to populate this list.</p>
+                </div>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+        <article class="glass-card">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="card-title">Patient progress</h3>
+                    <p class="card-subtitle">How far each active visit has moved</p>
+                </div>
+                <span class="chip">{{ active_visits|length }} active</span>
+            </div>
+            <div class="space-y-4">
+                {% for patient in patient_progress_list %}
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">{{ patient.name }}</p>
+                                <p class="text-xs text-slate-500">{{ patient.status }}</p>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">{{ patient.progress }}%</span>
+                        </div>
+                        <div class="progress-track mt-2">
+                            <div class="progress-fill" style="width: {{ patient.progress }}%;"></div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-sm text-slate-500">No patients are currently assigned to you.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="glass-card chart-card">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="card-title">Patient management</h3>
+                    <p class="card-subtitle">Status mix for today</p>
+                </div>
+                <span class="chip">Realtime</span>
+            </div>
+            <div class="chart-canvas">
+                <canvas id="patientOverviewChart"></canvas>
+            </div>
+            <div class="grid grid-cols-3 gap-4 mt-6 text-center">
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-slate-400">Waiting</p>
+                    <p class="text-2xl font-semibold text-amber-500">{{ waiting_count|default:0 }}</p>
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-slate-400">In consult</p>
+                    <p class="text-2xl font-semibold text-sky-500">{{ in_consultation_count|default:0 }}</p>
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-slate-400">Completed</p>
+                    <p class="text-2xl font-semibold text-emerald-500">{{ completed_today|default:0 }}</p>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <article class="glass-card info-card">
+            <p class="text-xs uppercase tracking-widest text-indigo-400">Queue intelligence</p>
+            <h2 class="text-3xl font-semibold text-slate-900 mt-2">Guide the patient flow</h2>
+            <p class="text-sm text-slate-600 mt-3">
+                Assignments, triage handoffs, and comeback visits all originate from the Waiting Queue. Keep it open so you can grab the next file or release one back to reception without switching contexts.
+            </p>
+            <ul class="mt-4 space-y-3 text-sm text-slate-600">
+                <li><i class="fas fa-check text-emerald-500 mr-2"></i>Pick a new patient directly from reception handoffs.</li>
+                <li><i class="fas fa-check text-emerald-500 mr-2"></i>Resume paused consultations from the Active tab.</li>
+                <li><i class="fas fa-check text-emerald-500 mr-2"></i>Release patients when labs or imaging are pending.</li>
+            </ul>
+            <div class="flex flex-wrap gap-3 mt-6">
+                <a href="{% url 'waiting_queue' %}" class="action-btn primary"><i class="fas fa-door-open"></i>Open queue</a>
+                <a href="{% url 'waiting_queue' %}#active" class="action-btn secondary"><i class="fas fa-wave-square"></i>Active sessions</a>
+            </div>
+        </article>
+        <article class="glass-card info-card">
+            <p class="text-xs uppercase tracking-widest text-rose-400">Consultation workspace</p>
+            <h2 class="text-3xl font-semibold text-slate-900 mt-2">Everything in one modal flow</h2>
+            <p class="text-sm text-slate-600 mt-3">
+                Medical record, billing, pharmacy, certificates, transfers, vitals, and appointments open as modular overlays directly inside the consultation page you already use.
+            </p>
+            <ol class="mt-4 space-y-3 text-sm text-slate-600">
+                <li><span class="font-semibold text-indigo-500">1.</span> Launch a consultation from the queue card.</li>
+                <li><span class="font-semibold text-indigo-500">2.</span> Use the Clinical Modules row to capture each workflow.</li>
+                <li><span class="font-semibold text-indigo-500">3.</span> Send to cashier from the header when all notes are complete.</li>
+            </ol>
+            <div class="flex flex-wrap gap-3 mt-6">
+                <a href="{% url 'waiting_queue' %}" class="action-btn primary"><i class="fas fa-stethoscope"></i>Start consultation</a>
+                <a href="{% url 'waiting_queue' %}#guide" class="action-btn secondary"><i class="fas fa-book"></i>See guide</a>
+            </div>
+        </article>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+{{ health_curve|json_script:"health-curve-data" }}
+{{ appointments_trend|json_script:"appointments-trend-data" }}
+{{ patient_overview|json_script:"patient-overview-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const healthCurveData = JSON.parse(document.getElementById('health-curve-data').textContent);
+    const appointmentsTrend = JSON.parse(document.getElementById('appointments-trend-data').textContent);
+    const patientOverviewData = JSON.parse(document.getElementById('patient-overview-data').textContent);
+
+    const baseLineOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+            x: { grid: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+    };
+
+    const healthCtx = document.getElementById('healthCurveChart');
+    if (healthCtx && healthCurveData) {
+        new Chart(healthCtx, {
+            type: 'line',
+            data: {
+                labels: healthCurveData.labels,
+                datasets: [
+                    {
+                        label: 'Total',
+                        data: healthCurveData.total,
+                        borderColor: '#0fb8ad',
+                        backgroundColor: 'rgba(15, 184, 173, 0.15)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                    },
+                    {
+                        label: 'Completed',
+                        data: healthCurveData.completed,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99,102,241,0.15)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                    }
+                ]
+            },
+            options: baseLineOptions,
+        });
+    }
+
+    const appointmentsCtx = document.getElementById('appointmentsChart');
+    if (appointmentsCtx && appointmentsTrend) {
+        new Chart(appointmentsCtx, {
+            type: 'line',
+            data: {
+                labels: appointmentsTrend.labels,
+                datasets: [
+                    {
+                        data: appointmentsTrend.counts,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37,99,235,0.15)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                    }
+                ]
+            },
+            options: baseLineOptions,
+        });
+    }
+
+    const overviewCtx = document.getElementById('patientOverviewChart');
+    if (overviewCtx && patientOverviewData) {
+        new Chart(overviewCtx, {
+            type: 'doughnut',
+            data: {
+                labels: patientOverviewData.labels,
+                datasets: [
+                    {
+                        data: patientOverviewData.values,
+                        backgroundColor: ['#f97316', '#38bdf8', '#10b981'],
+                        borderWidth: 0,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+});
+</script>
+{% endblock %}

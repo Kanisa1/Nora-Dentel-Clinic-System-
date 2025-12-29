@@ -1,0 +1,263 @@
+{% extends 'doctor/base_doctor.html' %}
+
+{% block title %}My Statistics - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}My Statistics{% endblock %}
+
+{% block content %}
+<style>
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+</style>
+
+<div class="bg-gradient-to-br from-gray-50 via-purple-50 to-gray-50 min-h-screen">
+    <div class="container-fluid px-6 py-6">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">
+                        <i class="fas fa-chart-line text-purple-600 mr-3"></i>
+                        My Statistics & Analytics
+                    </h1>
+                    <p class="text-gray-600 mt-2">Comprehensive overview of your clinical performance</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Last updated</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ today|date:"M d, Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overall Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <i class="fas fa-users text-4xl opacity-80"></i>
+                    <div class="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">ALL TIME</div>
+                </div>
+                <h3 class="text-4xl font-bold mb-2">{{ total_patients }}</h3>
+                <p class="text-blue-100">Total Patients</p>
+            </div>
+
+            <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <i class="fas fa-check-circle text-4xl opacity-80"></i>
+                    <div class="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">COMPLETED</div>
+                </div>
+                <h3 class="text-4xl font-bold mb-2">{{ total_completed }}</h3>
+                <p class="text-green-100">Total Completed</p>
+            </div>
+
+            <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <i class="fas fa-dollar-sign text-4xl opacity-80"></i>
+                    <div class="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">REVENUE</div>
+                </div>
+                <h3 class="text-4xl font-bold mb-2">{{ total_revenue|floatformat:0 }}</h3>
+                <p class="text-purple-100">Total Revenue (RWF)</p>
+            </div>
+
+            <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <i class="fas fa-percentage text-4xl opacity-80"></i>
+                    <div class="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">SUCCESS RATE</div>
+                </div>
+                <h3 class="text-4xl font-bold mb-2">
+                    {% if completion_rate %}
+                        {{ completion_rate|floatformat:1 }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </h3>
+                <p class="text-orange-100">Completion Rate</p>
+            </div>
+        </div>
+
+        <!-- Period Statistics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Today -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-calendar-day text-blue-600 mr-2"></i>
+                    Today's Performance
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                        <span class="text-gray-700">Patients</span>
+                        <span class="text-2xl font-bold text-blue-600">{{ today_patients }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                        <span class="text-gray-700">Completed</span>
+                        <span class="text-2xl font-bold text-green-600">{{ today_completed }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- This Week -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-calendar-week text-purple-600 mr-2"></i>
+                    This Week
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                        <span class="text-gray-700">Patients</span>
+                        <span class="text-2xl font-bold text-purple-600">{{ weekly_patients }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                        <span class="text-gray-700">Completed</span>
+                        <span class="text-2xl font-bold text-green-600">{{ weekly_completed }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- This Month -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-calendar-alt text-indigo-600 mr-2"></i>
+                    This Month
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-indigo-50 rounded-lg">
+                        <span class="text-gray-700">Patients</span>
+                        <span class="text-2xl font-bold text-indigo-600">{{ monthly_patients }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                        <span class="text-gray-700">Completed</span>
+                        <span class="text-2xl font-bold text-green-600">{{ monthly_completed }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Patient Trend Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-area text-purple-600 mr-2"></i>
+                    Patient Trend (Last 30 Days)
+                </h3>
+                <canvas id="patientTrendChart"></canvas>
+            </div>
+
+            <!-- Status Distribution Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-pie text-indigo-600 mr-2"></i>
+                    Visit Status Distribution
+                </h3>
+                <canvas id="statusDistributionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Diagnoses -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-disease text-red-600 mr-2"></i>
+                Most Common Diagnoses
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for diagnosis in top_diagnoses %}
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800">{{ diagnosis.diagnosis|truncatewords:8 }}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <span class="text-2xl font-bold text-purple-600">{{ diagnosis.count }}</span>
+                            <p class="text-xs text-gray-500">cases</p>
+                        </div>
+                        <i class="fas fa-clipboard-list text-purple-400 text-2xl"></i>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 col-span-2 text-center py-4">No diagnosis data available</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // Patient Trend Chart
+    const trendCtx = document.getElementById('patientTrendChart').getContext('2d');
+    const dates = {{ dates_json|safe }};
+    const counts = {{ counts_json|safe }};
+    
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Patients per Day',
+                data: counts,
+                borderColor: 'rgb(124, 58, 237)',
+                backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Status Distribution Chart
+    const statusCtx = document.getElementById('statusDistributionChart').getContext('2d');
+    const statusLabels = {{ status_distribution|safe }}.map(item => item.status);
+    const statusCounts = {{ status_distribution|safe }}.map(item => item.count);
+    
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusCounts,
+                backgroundColor: [
+                    'rgb(59, 130, 246)',
+                    'rgb(34, 197, 94)',
+                    'rgb(251, 191, 36)',
+                    'rgb(239, 68, 68)',
+                    'rgb(168, 85, 247)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

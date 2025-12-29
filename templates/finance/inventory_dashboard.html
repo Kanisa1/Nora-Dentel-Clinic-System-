@@ -1,0 +1,156 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Inventory Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Inventory Management Dashboard</h1>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Consumables</h5>
+                    <h3>{{ total_consumables }}</h3>
+                    <small>Different items in stock</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Low Stock Items</h5>
+                    <h3>{{ low_stock_count }}</h3>
+                    <small>Below minimum level</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Inventory Value</h5>
+                    <h3>{{ total_inventory_value|floatformat:0 }}</h3>
+                    <small>RWF</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Total Assets</h5>
+                    <h3>{{ total_assets }}</h3>
+                    <small>Value: {{ total_asset_value|floatformat:0 }} RWF</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'consumable_list' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-pills"></i> View Consumables
+                    </a>
+                    <a href="{% url 'consumable_create' %}" class="btn btn-success me-2">
+                        <i class="fas fa-plus"></i> Add Consumable
+                    </a>
+                    <a href="{% url 'fixed_asset_list' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-toolbox"></i> View Fixed Assets
+                    </a>
+                    <a href="{% url 'fixed_asset_create' %}" class="btn btn-success me-2">
+                        <i class="fas fa-plus"></i> Add Asset
+                    </a>
+                    <a href="{% url 'stock_alert_list' %}" class="btn btn-warning">
+                        <i class="fas fa-exclamation-triangle"></i> View Alerts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Stock Movements -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Stock Usage</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Used By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usage in recent_usage %}
+                            <tr>
+                                <td>{{ usage.usage_date|date:"M d" }}</td>
+                                <td>{{ usage.consumable.item_name }}</td>
+                                <td>{{ usage.quantity_used }} {{ usage.consumable.unit }}</td>
+                                <td>{{ usage.used_by.user.get_full_name }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">No recent usage</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Active Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in active_alerts %}
+                            <tr>
+                                <td>
+                                    {% if alert.alert_type == 'low_stock' %}
+                                        <span class="badge bg-warning">Low Stock</span>
+                                    {% elif alert.alert_type == 'out_of_stock' %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    {% elif alert.alert_type == 'expiring_soon' %}
+                                        <span class="badge bg-info">Expiring</span>
+                                    {% elif alert.alert_type == 'expired' %}
+                                        <span class="badge bg-danger">Expired</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ alert.message|truncatewords:8 }}</td>
+                                <td>{{ alert.created_at|date:"M d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-success">No active alerts</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

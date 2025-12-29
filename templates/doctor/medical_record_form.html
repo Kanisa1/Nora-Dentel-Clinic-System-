@@ -1,0 +1,329 @@
+{% extends 'doctor/base_doctor.html' %}
+
+{% block title %}Medical Record - {{ visit.patient.first_name }} {{ visit.patient.last_name }}{% endblock %}
+
+{% block page_title %}Patient Medical Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Patient Info Header -->
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-lg p-6 mb-6 text-white">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold mb-2">{{ visit.patient.first_name }} {{ visit.patient.last_name }}</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div><span class="text-purple-200">Age:</span> <span class="font-semibold">{{ visit.patient.age }} years</span></div>
+                    <div><span class="text-purple-200">Gender:</span> <span class="font-semibold">{{ visit.patient.gender|default:"N/A" }}</span></div>
+                    <div><span class="text-purple-200">Phone:</span> <span class="font-semibold">{{ visit.patient.phone }}</span></div>
+                    <div><span class="text-purple-200">Visit Date:</span> <span class="font-semibold">{{ visit.created_at|date:"d M Y, H:i" }}</span></div>
+                </div>
+            </div>
+            <a href="{% url 'doctor_dashboard_enhanced' %}" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Action Tabs -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button type="button" class="px-6 py-4 text-sm font-medium border-b-2 border-purple-500 text-purple-600">
+                    <i class="fas fa-file-medical mr-2"></i>Medical Record
+                </button>
+                <a href="{% url 'billing_sheet' visit.id %}" class="px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>Billing Sheet
+                </a>
+                <button type="button" onclick="alert('Certificate generation - to be implemented')" class="px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-certificate mr-2"></i>Generate Certificate
+                </button>
+                <a href="{% url 'transfer_patient' visit.id %}" class="px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-exchange-alt mr-2"></i>Transfer Patient
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Medical Record Form -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- 0. Triage / Vital Signs -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">
+                    <i class="fas fa-heartbeat"></i>
+                </span>
+                Triage / Vital Signs
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-thermometer-half text-red-500 mr-1"></i>Temperature (°C)
+                    </label>
+                    <input type="number" step="0.1" name="temperature_c" value="{{ triage.temperature_c|default:"" }}" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           placeholder="36.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-heartbeat text-red-500 mr-1"></i>Pulse (bpm)
+                    </label>
+                    <input type="number" name="pulse" value="{{ triage.pulse|default:"" }}" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           placeholder="72">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-tint text-red-500 mr-1"></i>Blood Pressure
+                    </label>
+                    <input type="text" name="blood_pressure" value="{{ triage.blood_pressure|default:"" }}" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           placeholder="120/80">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-weight text-red-500 mr-1"></i>Weight (kg) <span class="text-gray-400">(optional)</span>
+                    </label>
+                    <input type="number" step="0.1" name="weight" value="{{ triage.weight|default:"" }}" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           placeholder="70">
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-notes-medical text-blue-500 mr-1"></i>Symptoms
+                </label>
+                <textarea name="symptoms" rows="2" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                          placeholder="List patient's symptoms...">{{ triage.symptoms|default:"" }}</textarea>
+            </div>
+        </div>
+
+        <!-- 1. Chief Complaint -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">1</span>
+                Chief Complaint
+            </h3>
+            <textarea name="chief_complaint" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                      placeholder="Main reason for patient's visit...">{{ medical_record.chief_complaint|default:"" }}</textarea>
+        </div>
+
+        <!-- 2. History of Presenting Illness -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">2</span>
+                History of Presenting Illness
+            </h3>
+            <textarea name="history_presenting_illness" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                      placeholder="Detailed history of current condition...">{{ medical_record.history_presenting_illness|default:"" }}</textarea>
+        </div>
+
+        <!-- 3. Past Medical and Dental History -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">3</span>
+                Past Medical and Dental History
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Past Medical History</label>
+                    <textarea name="past_medical_history" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                              placeholder="Previous conditions, surgeries, hospitalizations...">{{ medical_record.past_medical_history|default:"" }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Past Dental History</label>
+                    <textarea name="past_dental_history" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                              placeholder="Previous dental treatments, procedures...">{{ medical_record.past_dental_history|default:"" }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Current Medications</label>
+                    <textarea name="current_medications" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                              placeholder="Current medications...">{{ medical_record.current_medications|default:"" }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Allergies</label>
+                    <textarea name="allergies" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                              placeholder="Known allergies...">{{ medical_record.allergies|default:"" }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Social and Family History -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">4</span>
+                Social and Family History
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Social History</label>
+                    <textarea name="social_history" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                              placeholder="Smoking, alcohol, occupation, lifestyle...">{{ medical_record.social_history|default:"" }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Family History</label>
+                    <textarea name="family_history" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                              placeholder="Family medical/dental conditions...">{{ medical_record.family_history|default:"" }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Review of Systems -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">5</span>
+                Review of Systems
+            </h3>
+            <textarea name="review_of_systems" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                      placeholder="Systematic review of body systems...">{{ medical_record.review_of_systems|default:"" }}</textarea>
+        </div>
+
+        <!-- 6. General Medical and Dental Examination -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">6</span>
+                General Medical and Dental Examination
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">General Examination</label>
+                    <textarea name="general_examination" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                              placeholder="General appearance, vital signs, overall health...">{{ medical_record.general_examination|default:"" }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Oral Examination</label>
+                    <textarea name="oral_examination" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                              placeholder="Oral cavity examination findings...">{{ medical_record.oral_examination|default:"" }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Dental and Medical Specialty Examination -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">7</span>
+                Dental and Medical Specialty Examination
+            </h3>
+            <textarea name="specialty_examination" rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-4" 
+                      placeholder="Detailed specialty-specific findings...">{{ medical_record.specialty_examination|default:"" }}</textarea>
+            
+            <!-- File Upload -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-upload mr-2"></i>Upload Photos/Documents
+                </label>
+                <input type="file" name="attachments" multiple accept="image/*,.pdf,.doc,.docx" 
+                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                <p class="mt-2 text-xs text-gray-500">Upload images, X-rays, lab results, or other documents</p>
+            </div>
+
+            {% if attachments %}
+            <div class="mt-4">
+                <p class="text-sm font-semibold text-gray-700 mb-3">Existing Attachments:</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {% for attachment in attachments %}
+                    <div class="border rounded-lg p-3 text-center hover:bg-gray-50 transition-colors">
+                        {% if attachment.file_type == 'photo' %}
+                        <i class="fas fa-image text-3xl text-blue-400 mb-2"></i>
+                        {% else %}
+                        <i class="fas fa-file-pdf text-3xl text-red-400 mb-2"></i>
+                        {% endif %}
+                        <p class="text-xs truncate font-medium">{{ attachment.description|default:"Document" }}</p>
+                        <a href="{{ attachment.file.url }}" target="_blank" class="text-xs text-purple-600 hover:text-purple-800">
+                            <i class="fas fa-external-link-alt mr-1"></i>View
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 8. Investigations -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">8</span>
+                Investigations (Lab Exams and Radiographs)
+            </h3>
+            <textarea name="investigations" rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-4" 
+                      placeholder="Lab results, radiograph findings...">{{ medical_record.investigations|default:"" }}</textarea>
+            
+            <!-- File Upload -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-upload mr-2"></i>Upload Investigation Results
+                </label>
+                <input type="file" name="investigation_files" multiple accept="image/*,.pdf,.doc,.docx" 
+                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            </div>
+        </div>
+
+        <!-- 9. Diagnosis -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">9</span>
+                Diagnosis
+            </h3>
+            <textarea name="diagnosis" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                      placeholder="Clinical diagnosis...">{{ medical_record.diagnosis|default:"" }}</textarea>
+        </div>
+
+        <!-- 10. Treatment Plan -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">10</span>
+                Treatment Plan
+            </h3>
+            <textarea name="treatment_plan" rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" 
+                      placeholder="Proposed treatment and management plan...">{{ medical_record.treatment_plan|default:"" }}</textarea>
+        </div>
+
+        <!-- 11. HMIS/IDSR Classification -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm font-bold">11</span>
+                HMIS / IDSR Classification
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-hospital mr-2"></i>HMIS Classification
+                    </label>
+                    <select name="hmis_classification" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="">Select HMIS Code...</option>
+                        {% for hmis in hmis_classifications %}
+                        <option value="{{ hmis.code }}" {% if medical_record.hmis_classification == hmis.code %}selected{% endif %}>
+                            {{ hmis.code }} - {{ hmis.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="mt-2 text-xs text-gray-500">Select disease classification for HMIS reporting</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-virus mr-2"></i>IDSR Disease (If Applicable)
+                    </label>
+                    <select name="idsr_disease" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="">Select IDSR Disease...</option>
+                        {% for code, name in idsr_diseases %}
+                        <option value="{{ code }}" {% if medical_record.idsr_disease == code %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="mt-2 text-xs text-gray-500">Select if patient has a notifiable disease</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex gap-4 justify-end">
+            <a href="{% url 'doctor_dashboard_enhanced' %}" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700">
+                <i class="fas fa-times mr-2"></i>Cancel
+            </a>
+            <button type="submit" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg font-medium">
+                <i class="fas fa-save mr-2"></i>Save Medical Record
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

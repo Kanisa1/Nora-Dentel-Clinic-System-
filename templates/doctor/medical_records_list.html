@@ -1,0 +1,91 @@
+{% extends 'doctor/base_doctor.html' %}
+
+{% block title %}Medical Records - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}Medical Records{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-br from-gray-50 via-purple-50 to-gray-50 min-h-screen">
+    <div class="container-fluid px-6 py-6">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">
+                        <i class="fas fa-notes-medical text-purple-600 mr-3"></i>
+                        Medical Records
+                    </h1>
+                    <p class="text-gray-600 mt-2">Complete history of patient medical records</p>
+                </div>
+                <div class="bg-purple-100 px-6 py-3 rounded-lg">
+                    <span class="text-purple-800 font-bold text-2xl">{{ medical_records.count }}</span>
+                    <p class="text-purple-600 text-sm">Total Records</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Records Table -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Date</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Patient Name</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Age</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Chief Complaint</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Diagnosis</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Treatment</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for record in medical_records %}
+                        <tr class="hover:bg-purple-50 transition-colors">
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <div class="font-medium">{{ record.created_at|date:"M d, Y" }}</div>
+                                <div class="text-xs text-gray-500">{{ record.created_at|time:"H:i" }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-semibold text-gray-900">
+                                    {{ record.visit.patient.first_name }} {{ record.visit.patient.last_name }}
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    <i class="fas fa-phone mr-1"></i>{{ record.visit.patient.phone }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                {{ record.visit.patient.age|default:"--" }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <div class="max-w-xs truncate">{{ record.chief_complaint|default:"--" }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <div class="max-w-xs truncate">{{ record.diagnosis|default:"--" }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                <div class="max-w-xs truncate">{{ record.treatment_plan|default:"--" }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <a href="{% url 'medical_record_form' record.visit.id %}" 
+                                   class="inline-flex items-center px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                    <i class="fas fa-eye mr-2"></i>View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+                                <p class="text-gray-500 text-lg">No medical records found</p>
+                                <p class="text-gray-400 text-sm mt-2">Records will appear here as you document patient visits</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

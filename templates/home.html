@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% load static %}
+{% block home_navbar %}
+    <header class="site-navbar">
+        <div class="nav-brand">
+            <img src="{% static 'images/logo.png' %}" alt="Nora Dental Clinic">
+            <div>
+                <h1>Nora Dental Clinic OS</h1>
+                <span class="text-xs text-slate-500">Role-based operations hub</span>
+            </div>
+        </div>
+        <nav>
+            <a href="/">Home</a>
+            <a href="{% url 'admin:index' %}">Admin</a>
+            <a href="{% url 'reception_login' %}">Switch role</a>
+        </nav>
+        <div class="navbar-cta">
+            <span class="hidden md:inline nav-indicator">Need help?</span>
+            <a href="mailto:norhadentalclinic@gmail.com">Contact support</a>
+        </div>
+    </header>
+{% endblock %}
+{% block content %}
+    {% with home_page=True %}
+        {% include "home_content.html" %}
+    {% endwith %}
+{% endblock %}
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .hero-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 30px 80px rgba(26, 16, 44, 0.4);
+        }
+
+        .hero-card h3 {
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            text-decoration: none;
+            font-weight: 600;
+            padding: 14px 26px;
+            border-radius: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: #6318a7;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-outline {
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: #fff;
+        }
+
+        .btn:hover {
+            transform: translateY(-4px);
+        }
+
+        .stats-bar {
+            background: #fff;
+            margin: -70px auto 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 80px rgba(64, 19, 95, 0.15);
+            max-width: 1100px;
+            padding: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat h4 {
+            margin: 0;
+            font-size: 2rem;
+            color: #6318a7;
+        }
+
+        .stat p {
+            margin: 6px 0 0;
+            color: #6b5d75;
+            font-size: 0.95rem;
+        }
+
+        section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .portals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .portal-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 24px;
+            border: 1px solid #ece4f5;
+            box-shadow: 0 14px 30px rgba(51, 16, 105, 0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .portal-card i {
+            font-size: 1.8rem;
+            color: #6318a7;
+            margin-bottom: 16px;
+        }
+
+        .portal-card a {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            color: #6318a7;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #fff, #faf5ff);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid #eee2ff;
+        }
+
+        .cta-panel {
+            background: linear-gradient(120deg, #1c0f2d, #431d72 60%, #c47ff1);
+            color: #fff;
+            border-radius: 24px;
+            padding: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        footer.site-footer {
+            background: #12091d;
+            color: #d8cbed;
+            padding: 50px 20px 30px;
+            margin-top: 40px;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-col h4 {
+            margin-bottom: 14px;
+            color: #fff;
+        }
+
+        .footer-links a {
+            display: block;
+            color: #d8cbed;
+            text-decoration: none;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: #a995c4;
+        }
+
+        @media (max-width: 640px) {
+            .hero-actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <div class="hero-inner">
+            <div class="hero-copy">
+                <div class="badge"><i class="fas fa-sparkles"></i> Precision dentistry platform</div>
+                <h1>Elevated care, streamlined operations.</h1>
+                <p>
+                    Nora Dental Clinic OS unifies reception, clinical, pharmacy, and finance workflows so your team can focus on patient smiles.
+                    Every login leads to a tailored dashboard, real-time stats, and proactive notifications.
+                </p>
+                <div class="hero-actions">
+                    <a href="{% url 'reception_login' %}" class="btn btn-primary"><i class="fas fa-user-nurse"></i> Reception Portal</a>
+                    <a href="{% url 'doctor-login' %}" class="btn btn-outline"><i class="fas fa-user-md"></i> Doctor Portal</a>
+                    <a href="{% url 'pharmacy_login' %}" class="btn btn-outline"><i class="fas fa-pills"></i> Pharmacy Portal</a>
+                    <a href="{% url 'inventory_login' %}" class="btn btn-outline"><i class="fas fa-warehouse"></i> Inventory Portal</a>
+                    <a href="{% url 'finance_officer_dashboard' %}" class="btn btn-outline"><i class="fas fa-chart-line"></i> Finance Portal</a>
+                </div>
+            </div>
+            <div class="hero-card">
+                <h3><i class="fas fa-heartbeat"></i> Daily Snapshot</h3>
+                <ul style="list-style:none; padding:0; margin:20px 0 30px; line-height:1.6;">
+                    <li><strong>Appointments today:</strong> automated reminders ready</li>
+                    <li><strong>Clinic users:</strong> role-based dashboards live</li>
+                    <li><strong>Notifications:</strong> SMS + logs enabled</li>
+                </ul>
+                <a href="{% url 'cashier_login' %}" class="btn btn-primary" style="width:100%; justify-content:center;">
+                    <i class="fas fa-cash-register"></i> Cashier Console
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stat">
+            <h4>9+</h4>
+            <p>Role-specific workspaces</p>
+        </div>
+        <div class="stat">
+            <h4>24/7</h4>
+            <p>Automated SMS concierge</p>
+        </div>
+        <div class="stat">
+            <h4>100%</h4>
+            <p>Patient journey coverage</p>
+        </div>
+        <div class="stat">
+            <h4>Real-time</h4>
+            <p>Stock & finance tracking</p>
+        </div>
+    </div>
+
+    <section>
+        <h2 style="font-size:2rem; margin-bottom:20px;">Choose your portal</h2>
+        <div class="portals">
+            <div class="portal-card">
+                <i class="fas fa-receipt"></i>
+                <h3>Reception</h3>
+                <p>Patient onboarding, appointment orchestration, queue oversight.</p>
+                <a href="{% url 'reception_login' %}">Launch <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="portal-card">
+                <i class="fas fa-stethoscope"></i>
+                <h3>Doctors</h3>
+                <p>Clinical dashboards, treatment records, follow-up automation.</p>
+                <a href="{% url 'doctor-login' %}">Launch <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="portal-card">
+                <i class="fas fa-cash-register"></i>
+                <h3>Cashier</h3>
+                <p>Invoice reconciliation, payment capture, live revenue view.</p>
+                <a href="{% url 'cashier_login' %}">Launch <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="portal-card">
+                <i class="fas fa-pills"></i>
+                <h3>Pharmacy</h3>
+                <p>Medicine dispensing, stock alerts, expiry tracking, prescription management.</p>
+                <a href="{% url 'pharmacy_login' %}">Launch <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="portal-card">
+                <i class="fas fa-warehouse"></i>
+                <h3>Inventory</h3>
+                <p>Equipment tracking, consumables management, stock movements, supplier reports.</p>
+                <a href="{% url 'inventory_login' %}">Launch <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="portal-card">
+                <i class="fas fa-chart-line"></i>
+                <h3>Finance</h3>
+                <p>Revenue analysis, expense tracking, financial reporting, budgeting.</p>
+                <a href="{% url 'finance_officer_dashboard' %}">Launch <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2 style="font-size:2rem; margin-bottom:20px;">A complete clinical cockpit</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-user-injured"></i></div>
+                <h3>Patient Storyline</h3>
+                <p>Unified record spanning appointments, visits, and prescriptions.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
+                <h3>Executive Dashboards</h3>
+                <p>Live KPIs for capacity, revenue and patient flow.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-shield-heart"></i></div>
+                <h3>Smart Notifications</h3>
+                <p>Automated confirmations, reminders, and greetings with audit trail.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-diagram-project"></i></div>
+                <h3>Department Routing</h3>
+                <p>Role-aware navigation keeps teams focused on the right deck.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                <h3>Billing Confidence</h3>
+                <p>Tariff-aware billing items flow straight to invoicing and payments.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-cloud-arrow-down"></i></div>
+                <h3>Doc Center</h3>
+                <p>Store certificates, attachments, and invoices securely.</p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="cta-panel">
+            <div>
+                <p style="margin:0 0 10px; text-transform:uppercase; letter-spacing:2px; font-size:0.9rem;">Quick start</p>
+                <h2 style="margin:0 0 10px; font-size:2rem;">Need additional roles or onboarding scripts?</h2>
+                <p style="margin:0; opacity:0.85;">Use our helper commands to create test users, seed departments, and verify dashboards in minutes.</p>
+            </div>
+            <a href="{% url 'admin:index' %}" class="btn btn-primary" style="background:#fff; color:#1c0f2d;">
+                <i class="fas fa-toolbox"></i> Admin Console
+            </a>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-col">
+                <img src="{% static 'images/logo.png' %}" alt="Nora Dental" style="width:90px; height:auto; margin-bottom:12px;">
+                <p>Role-based clinic OS crafted for precision dentistry teams in Kigali and beyond.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Portals</h4>
+                <div class="footer-links">
+                    <a href="{% url 'reception_login' %}">Reception Desk</a>
+                    <a href="{% url 'doctor-login' %}">Doctor Suite</a>
+                    <a href="{% url 'cashier_login' %}">Cashier Hub</a>
+                    <a href="{% url 'pharmacy_login' %}">Pharmacy</a>
+                    <a href="{% url 'inventory_login' %}">Inventory</a>
+                    <a href="{% url 'finance_officer_dashboard' %}">Finance</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Contact</h4>
+                <p>Email: norhadentalclinic@gmail.com<br>Phone: +250 798 287 919<br>Location: Gasabo, Kigali</p>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <div class="footer-links">
+                    <a href="{% url 'admin:index' %}">Admin console</a>
+                    <a href="mailto:norhadentalclinic@gmail.com">Support desk</a>
+                    <a href="https://developers.africastalking.com/">SMS status</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © {% now "Y" %} Nora Dental Clinic. Crafted with care for clinical excellence.
+        </div>
+

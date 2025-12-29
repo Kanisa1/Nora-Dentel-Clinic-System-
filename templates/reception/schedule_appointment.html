@@ -1,0 +1,175 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Schedule Appointment - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-calendar-plus"></i> Schedule New Appointment
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'reception_dashboard' %}" class="nav-link">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_appointments' %}" class="nav-link active">
+            <i class="fas fa-calendar-alt"></i> Appointments
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Schedule a new appointment for a patient</div>
+
+    <div class="form-container" style="max-width: 700px;">
+        <form method="post" action="{% url 'reception_schedule_appointment' %}">
+            {% csrf_token %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <h3 style="color: #8B3A8B; margin-bottom: 20px;">Appointment Details</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Select Patient *</label>
+                    <select name="patient_id" id="patient_select" required onchange="updatePatientInfo()">
+                        <option value="">-- Choose Patient --</option>
+                        {% for patient in patients %}
+                            <option value="{{ patient.id }}" data-phone="{{ patient.phone }}" data-insured="{{ patient.is_insured }}">
+                                {{ patient.first_name }} {{ patient.last_name }} (ID: {{ patient.id }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Select Department *</label>
+                    <select name="department_id" id="department_select" required onchange="loadDoctors()">
+                        <option value="">-- Choose Department --</option>
+                        {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Select Doctor *</label>
+                    <select name="doctor_id" id="doctor_select" required disabled>
+                        <option value="">-- First Select Department --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Appointment Date *</label>
+                    <input type="date" name="scheduled_date" required min="{{ today }}">
+                </div>
+                <div class="form-group">
+                    <label>Appointment Time *</label>
+                    <input type="time" name="scheduled_time" required>
+                </div>
+            </div>
+
+            <div class="form-row full">
+                <div class="form-group">
+                    <label>Notes / Reason for Visit</label>
+                    <textarea name="notes" placeholder="Enter any notes about the appointment..."></textarea>
+                </div>
+            </div>
+
+            <!-- Patient Info Display -->
+            <div id="patient_info" style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; display: none;">
+                <h4 style="color: #8B3A8B; margin-bottom: 10px;">Patient Information</h4>
+                <p><strong>Phone:</strong> <span id="patient_phone">-</span></p>
+                <p><strong>Insurance Status:</strong> <span id="patient_insurance">-</span></p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px;">
+                <a href="{% url 'reception_dashboard' %}" class="btn btn-primary" style="text-align: center; text-decoration: none; padding: 12px 20px;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-calendar-check"></i> Schedule Appointment
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updatePatientInfo() {
+    const select = document.getElementById('patient_select');
+    const option = select.options[select.selectedIndex];
+    
+    if (option.value) {
+        document.getElementById('patient_info').style.display = 'block';
+        document.getElementById('patient_phone').textContent = option.dataset.phone || 'N/A';
+        document.getElementById('patient_insurance').textContent = 
+            option.dataset.insured === 'True' ? 'Insured' : 'Private';
+    } else {
+        document.getElementById('patient_info').style.display = 'none';
+    }
+}
+
+function loadDoctors() {
+    const departmentSelect = document.getElementById('department_select');
+    const doctorSelect = document.getElementById('doctor_select');
+    const departmentId = departmentSelect.value;
+    
+    // Reset doctor dropdown
+    doctorSelect.innerHTML = '<option value="">-- Loading Doctors... --</option>';
+    doctorSelect.disabled = true;
+    
+    if (!departmentId) {
+        doctorSelect.innerHTML = '<option value="">-- First Select Department --</option>';
+        return;
+    }
+    
+    // Fetch doctors by department
+    fetch(`{% url 'get_doctors_by_department' %}?department_id=${departmentId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Received doctors data:', data); // Debug log
+            doctorSelect.innerHTML = '<option value="">-- Choose Doctor --</option>';
+            
+            if (data.doctors && data.doctors.length > 0) {
+                data.doctors.forEach(doctor => {
+                    console.log('Adding doctor:', doctor); // Debug log
+                    const option = document.createElement('option');
+                    option.value = doctor.id;
+                    option.textContent = `Dr. ${doctor.name}`;
+                    doctorSelect.appendChild(option);
+                });
+                doctorSelect.disabled = false;
+            } else {
+                console.log('No doctors found for department'); // Debug log
+                doctorSelect.innerHTML = '<option value="">-- No doctors available in this department --</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading doctors:', error);
+            doctorSelect.innerHTML = '<option value="">-- Error loading doctors --</option>';
+        });
+}
+
+// Set minimum date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="scheduled_date"]').setAttribute('min', today);
+});
+</script>
+{% endblock %}

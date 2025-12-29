@@ -1,0 +1,159 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Insurance Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Insurance & Beneficiary Report</h1>
+    
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label>Insurance Provider</label>
+                    <select name="insurer" class="form-control" onchange="this.form.submit()">
+                        <option value="">All Insurers</option>
+                        {% for ins in insurers %}
+                            <option value="{{ ins }}" {% if selected_insurer == ins %}selected{% endif %}>{{ ins }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>Period</label>
+                    <select name="period" class="form-control">
+                        <option value="daily" {% if period == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+                        <option value="annual" {% if period == 'annual' %}selected{% endif %}>Annual</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2">
+                    <label>End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-1">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-primary form-control">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Insurance Summary -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Insurance Summary by Provider</h5>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Insurer</th>
+                        <th>Total Billed</th>
+                        <th>Insurance Pays</th>
+                        <th>Patient Pays</th>
+                        <th>Avg Coverage</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ins in insurer_summary %}
+                    <tr>
+                        <td><strong>{{ ins.visit__patient__insurer }}</strong></td>
+                        <td>{{ ins.total_billed|floatformat:0 }} RWF</td>
+                        <td class="text-success">{{ ins.insurance_portion|floatformat:0 }} RWF</td>
+                        <td class="text-danger">{{ ins.patient_portion|floatformat:0 }} RWF</td>
+                        <td>{{ ins.avg_coverage|floatformat:0 }}%</td>
+                        <td>{{ ins.count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">No insurance data</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Department Breakdown -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Department Breakdown by Insurer</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Insurer</th>
+                        <th>Department</th>
+                        <th>Amount</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in dept_breakdown %}
+                    <tr>
+                        <td>{{ item.visit__patient__insurer }}</td>
+                        <td>{{ item.visit__department__name }}</td>
+                        <td>{{ item.total|floatformat:0 }} RWF</td>
+                        <td>{{ item.count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No data</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Detailed Invoices -->
+    <div class="card">
+        <div class="card-header">
+            <h5>Detailed Invoice List (Recent 100)</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Department</th>
+                        <th>Insurer</th>
+                        <th>Coverage %</th>
+                        <th>Total</th>
+                        <th>Insurance Pays</th>
+                        <th>Patient Pays</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoice_details %}
+                    <tr>
+                        <td>{{ inv.date|date:"M d, Y" }}</td>
+                        <td>{{ inv.patient.first_name }} {{ inv.patient.last_name }}</td>
+                        <td>Dr. {{ inv.doctor.user.first_name }} {{ inv.doctor.user.last_name }}</td>
+                        <td>{{ inv.department.name }}</td>
+                        <td>{{ inv.patient.insurer }}</td>
+                        <td>{{ inv.coverage_pct }}%</td>
+                        <td>{{ inv.total|floatformat:0 }} RWF</td>
+                        <td class="text-success">{{ inv.insurance_pays|floatformat:0 }} RWF</td>
+                        <td class="text-danger">{{ inv.patient_pays|floatformat:0 }} RWF</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">No invoices</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

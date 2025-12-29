@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Doctor Dashboard - Nora Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-stethoscope"></i>
+        Doctor Dashboard
+    </span>
+{% endblock %}
+
+{% block content %}
+    <li class="nav-item">
+        <a href="{% url 'doctor-dashboard' %}" class="nav-link active">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+<div class="space-y-6">
+    <!-- Today's Schedule Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-clinic-purple hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Waiting Patients</p>
+                    <p class="text-3xl font-bold text-clinic-purple mt-2">{{ waiting_queue_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-users text-4xl text-clinic-light"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Scheduled Today</p>
+                    <p class="text-3xl font-bold text-yellow-600 mt-2">{{ scheduled_appointments_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-calendar text-4xl text-yellow-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Completed Today</p>
+                    <p class="text-3xl font-bold text-blue-600 mt-2">{{ completed_today|default:0 }}</p>
+                </div>
+                <i class="fas fa-check-circle text-4xl text-blue-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Pending Invoices</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2">{{ pending_invoices|default:0 }}</p>
+                </div>
+                <i class="fas fa-receipt text-4xl text-green-100"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waiting Queue - Full Width -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-clinic-dark flex items-center gap-2">
+                <i class="fas fa-chair text-clinic-purple"></i>
+                Waiting Queue
+            </h3>
+            <span class="text-sm text-gray-500">
+                {{ waiting_count }} patient{{ waiting_count|pluralize }} waiting
+            </span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">#</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient Name</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Age</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Gender</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Checked In</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for entry in waiting_queue|default:"" %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 font-bold text-clinic-purple text-lg">#{{ entry.position }}</td>
+                            <td class="px-4 py-2 font-semibold">{{ entry.visit.patient.first_name }} {{ entry.visit.patient.last_name }}</td>
+                            <td class="px-4 py-2">{{ entry.visit.patient.age|default:"—" }}</td>
+                            <td class="px-4 py-2">{{ entry.visit.patient.gender|default:"—" }}</td>
+                            <td class="px-4 py-2">
+                                {% if entry.status == 'waiting' %}
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-semibold">Waiting</span>
+                                {% elif entry.status == 'in_consultation' %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">Consulting</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Done</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2 text-gray-600">{{ entry.checked_in_at|time:"H:i" }}</td>
+                            <td class="px-4 py-2">
+                                <a href="{% url 'doctor_clinical_record' entry.visit.id %}" class="bg-clinic-purple text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-clinic-dark transition inline-flex items-center gap-2">
+                                    <i class="fas fa-play"></i> Start Consultation
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                <i class="fas fa-inbox text-3xl mb-2"></i>
+                                <p class="mt-2 font-medium">No patients waiting</p>
+                                <p class="text-xs text-gray-400 mt-1">Patients will appear here once checked in</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scheduled Appointments -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-calendar-check text-clinic-purple"></i>
+            Scheduled Appointments Today
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Time</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Phone</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Notes</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for apt in scheduled_appointments|default:"" %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 font-semibold">{{ apt.scheduled_at|time:"H:i" }}</td>
+                            <td class="px-4 py-2">{{ apt.patient.first_name }} {{ apt.patient.last_name }}</td>
+                            <td class="px-4 py-2">{{ apt.patient.phone|default:"—" }}</td>
+                            <td class="px-4 py-2 text-gray-600 text-xs">{{ apt.notes|default:"—"|truncatewords:3 }}</td>
+                            <td class="px-4 py-2">
+                                {% if apt.status == 'checked_in' %}
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-semibold">Checked In</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">Scheduled</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2">
+                                <button class="bg-clinic-purple text-white px-3 py-1 rounded text-xs font-semibold hover:bg-clinic-dark transition">
+                                    Start
+                                </button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-6 text-center text-gray-500">No scheduled appointments today</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- All Visits Log -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-check-circle text-clinic-purple"></i>
+            All Visits History
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Date & Time</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Department</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for visit in visits|default:"" %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2">{{ visit.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="px-4 py-2 font-semibold">{{ visit.patient.first_name }} {{ visit.patient.last_name }}</td>
+                            <td class="px-4 py-2">{{ visit.department.name }}</td>
+                            <td class="px-4 py-2">
+                                {% if visit.status == 'open' %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">Open</span>
+                                {% elif visit.status == 'billed' %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Billed</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">Closed</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2">
+                                <a href="#" class="text-clinic-purple hover:text-clinic-dark font-semibold">View</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-gray-500">No visits recorded</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

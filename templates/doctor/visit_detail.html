@@ -1,0 +1,1350 @@
+{% extends 'doctor/base_doctor.html' %}
+{% load static %}
+
+{% block title %}Patient Consultation - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}Patient Consultation{% endblock %}
+
+{% block extra_css %}
+<style>
+    .module-tile {
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        background: linear-gradient(135deg, rgba(124,58,237,0.05), rgba(16,185,129,0.05));
+        padding: 1.5rem;
+        text-align: left;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .module-tile:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+    .module-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: rgba(15,23,42,0.7);
+    }
+    .module-modal.hidden {
+        display: none;
+    }
+    .modal-panel {
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+        max-height: 90vh;
+        overflow: hidden;
+    }
+    .modal-body-scroll {
+        max-height: calc(90vh - 90px);
+        overflow-y: auto;
+    }
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+    }
+    .section-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .input-field {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+    .input-field:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+    .action-btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-6 space-y-6">
+    
+    <!-- Patient Header Card -->
+    <div class="bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl shadow-2xl p-6 text-white">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-3xl font-bold backdrop-blur-sm">
+                    {{ patient.full_name.0|upper }}
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">{{ patient.full_name }}</h1>
+                    <div class="flex items-center gap-6 text-purple-100">
+                        <span><i class="fas fa-id-card mr-2"></i>ID: {{ patient.id }}</span>
+                        <span><i class="fas fa-birthday-cake mr-2"></i>{{ patient.age }} years</span>
+                        <span><i class="fas fa-venus-mars mr-2"></i>{{ patient.gender }}</span>
+                        <span><i class="fas fa-phone mr-2"></i>{{ patient.phone }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-sm text-purple-200 mb-1">Insurance Status</div>
+                {% if patient.is_insured %}
+                <div class="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold">
+                    <i class="fas fa-shield-alt mr-2"></i>{{ patient.insurer }}
+                </div>
+                {% else %}
+                <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                    <i class="fas fa-times-circle mr-2"></i>No Insurance
+                </div>
+                {% endif %}
+                <div class="text-xs text-purple-200 mt-2">Visit: {{ visit.created_at|date:"M d, Y - h:i A" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Bar -->
+    <div class="bg-white rounded-xl shadow-lg p-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-800"><i class="fas fa-bolt text-yellow-500 mr-2"></i>Quick Actions</h3>
+            <div class="flex gap-3">
+                <button onclick="window.print()" class="action-btn bg-blue-500 hover:bg-blue-600 text-white">
+                    <i class="fas fa-print"></i> Print Record
+                </button>
+                <button onclick="openModal('appointmentModal')" class="action-btn bg-green-500 hover:bg-green-600 text-white">
+                    <i class="fas fa-calendar-plus"></i> Schedule Appointment
+                </button>
+                <button onclick="openModal('certificateModal')" class="action-btn bg-purple-500 hover:bg-purple-600 text-white">
+                    <i class="fas fa-certificate"></i> Medical Certificate
+                </button>
+                <button onclick="openModal('leaveModal')" class="action-btn bg-pink-500 hover:bg-pink-600 text-white">
+                    <i class="fas fa-file-medical"></i> Medical Leave
+                </button>
+                <button onclick="openModal('transferModal')" class="action-btn bg-orange-500 hover:bg-orange-600 text-white">
+                    <i class="fas fa-exchange-alt"></i> Transfer Patient
+                </button>
+                <button onclick="sendToCashier()" class="action-btn bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold">
+                    <i class="fas fa-cash-register"></i> Send to Cashier
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content with Tabs -->
+    <div class="bg-white rounded-xl shadow-lg">
+        <div class="p-6 space-y-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Clinical Modules</h2>
+                    <p class="text-sm text-gray-500">Tap a module below to open its full-screen form in a focused modal experience.</p>
+                </div>
+                <div class="flex flex-wrap gap-3 text-sm text-gray-500">
+                    <span class="flex items-center gap-2"><i class="fas fa-circle text-purple-500 text-xs"></i>Medical record</span>
+                    <span class="flex items-center gap-2"><i class="fas fa-circle text-green-500 text-xs"></i>Billing</span>
+                    <span class="flex items-center gap-2"><i class="fas fa-circle text-pink-500 text-xs"></i>Pharmacy</span>
+                    <span class="flex items-center gap-2"><i class="fas fa-circle text-red-500 text-xs"></i>Vital signs</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <button type="button" class="module-tile" onclick="openModal('medicalRecordModal')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-file-medical"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-800">Medical Record</p>
+                            <p class="text-xs text-gray-500">
+                                {% if medical_record.updated_at %}
+                                    Updated {{ medical_record.updated_at|date:"M d, Y H:i" }}
+                                {% else %}
+                                    Not captured yet
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </button>
+
+                <button type="button" class="module-tile" onclick="openModal('billingModal')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-800">Billing Sheet</p>
+                            <p class="text-xs text-gray-500">
+                                Total: {{ billing_totals.private_total|default:0|floatformat:0 }} RWF private
+                            </p>
+                        </div>
+                    </div>
+                </button>
+
+                <button type="button" class="module-tile" onclick="openModal('pharmacyModal')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-800">Pharmacy &amp; Rx</p>
+                            <p class="text-xs text-gray-500">{{ prescriptions|length }} recorded prescription{{ prescriptions|length|pluralize }}</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button type="button" class="module-tile" onclick="openModal('vitalModal')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-800">Vital Signs</p>
+                            <p class="text-xs text-gray-500">BP: {{ triage.blood_pressure|default:"--" }} · Temp: {{ triage.temperature_c|default:"--" }}{% if triage.temperature_c %}°C{% endif %}</p>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module Modal Surfaces -->
+    <div id="medicalRecordModal" class="module-modal hidden" role="dialog" aria-modal="true" aria-labelledby="medicalRecordTitle" aria-hidden="true">
+        <div class="modal-panel bg-white w-full max-w-5xl relative">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-purple-500 font-semibold">Module</p>
+                    <h3 id="medicalRecordTitle" class="text-2xl font-bold text-gray-900">Medical Record</h3>
+                </div>
+                <button type="button" class="text-gray-400 hover:text-gray-600 text-2xl" onclick="closeModal('medicalRecordModal')" aria-label="Close Medical Record">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body-scroll p-6 space-y-6">
+                <form method="post" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mr-3 font-bold">1</span>
+                            <span>Chief Complaint</span>
+                        </h3>
+                        <textarea name="chief_complaint" rows="3" class="input-field" placeholder="What is the patient's main complaint?">{{ medical_record.chief_complaint }}</textarea>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mr-3 font-bold">2</span>
+                            <span>History of Presenting Illness</span>
+                        </h3>
+                        <textarea name="history_present_illness" rows="4" class="input-field" placeholder="Detailed history of the current complaint, onset, duration, progression...">{{ medical_record.history_presenting_illness }}</textarea>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mr-3 font-bold">3</span>
+                            <span>Past Medical & Dental History</span>
+                        </h3>
+                        <textarea name="past_medical_history" rows="4" class="input-field" placeholder="Previous medical conditions, surgeries, hospitalizations, dental treatments...">{{ medical_record.past_medical_history }}</textarea>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center mr-3 font-bold">4</span>
+                            <span>Social & Family History</span>
+                        </h3>
+                        <textarea name="social_family_history" rows="4" class="input-field" placeholder="Family medical history, occupation, lifestyle, smoking, alcohol use...">{{ medical_record.social_history }}</textarea>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center mr-3 font-bold">5</span>
+                            <span>Review of Systems</span>
+                        </h3>
+                        <textarea name="review_systems" rows="4" class="input-field" placeholder="Systematic review: cardiovascular, respiratory, gastrointestinal, neurological, etc...">{{ medical_record.review_of_systems }}</textarea>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mr-3 font-bold">6</span>
+                            <span>General Medical & Dental Examination</span>
+                        </h3>
+                        <textarea name="general_examination" rows="4" class="input-field" placeholder="General appearance, vital signs, overall dental condition, oral hygiene...">{{ medical_record.general_examination }}</textarea>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-pink-100 text-pink-600 rounded-lg flex items-center justify-center mr-3 font-bold">7</span>
+                            <span>Dental & Medical Specialty Examination</span>
+                        </h3>
+                        <textarea name="specialty_examination" rows="5" class="input-field" placeholder="Detailed intraoral and extraoral examination, specific findings, tooth numbering...">{{ medical_record.specialty_examination }}</textarea>
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-camera text-purple-600 mr-2"></i>Upload Photos
+                                </label>
+                                <input type="file" name="examination_photos" multiple accept="image/*" class="input-field">
+                                <p class="text-xs text-gray-500 mt-1">Intraoral/extraoral photos, lesions, conditions</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-file-pdf text-red-600 mr-2"></i>Upload Documents
+                                </label>
+                                <input type="file" name="examination_documents" multiple accept=".pdf,.doc,.docx" class="input-field">
+                                <p class="text-xs text-gray-500 mt-1">Previous records, referral letters</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-teal-100 text-teal-600 rounded-lg flex items-center justify-center mr-3 font-bold">8</span>
+                            <span>Investigations (Lab Exams & Radiographs)</span>
+                        </h3>
+                        <textarea name="investigations" rows="5" class="input-field" placeholder="Lab tests ordered/results, X-rays, CBCT, OPG, periapical radiographs findings...">{{ medical_record.investigations }}</textarea>
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-x-ray text-blue-600 mr-2"></i>Upload Radiographs
+                                </label>
+                                <input type="file" name="radiographs" multiple accept="image/*,.dcm" class="input-field">
+                                <p class="text-xs text-gray-500 mt-1">X-rays, CBCT scans, OPG images</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-flask text-green-600 mr-2"></i>Upload Lab Results
+                                </label>
+                                <input type="file" name="lab_results" multiple accept=".pdf,image/*" class="input-field">
+                                <p class="text-xs text-gray-500 mt-1">Blood work, cultures, pathology reports</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mr-3 font-bold">9</span>
+                            <span>Diagnosis</span>
+                        </h3>
+                        <textarea name="diagnosis" rows="3" class="input-field" placeholder="Clinical diagnosis based on examination and investigations...">{{ medical_record.diagnosis }}</textarea>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-cyan-100 text-cyan-600 rounded-lg flex items-center justify-center mr-3 font-bold">10</span>
+                            <span>Treatment Plan</span>
+                        </h3>
+                        <textarea name="treatment_plan" rows="5" class="input-field" placeholder="Detailed treatment plan, procedures, timeline, follow-up appointments...">{{ medical_record.treatment_plan }}</textarea>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mr-3 font-bold">11</span>
+                            <span>HMIS / IDSR Classification</span>
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-3">
+                                    <i class="fas fa-hospital text-blue-600 mr-2"></i>HMIS Classification
+                                </label>
+                                <select name="hmis_classification" class="input-field">
+                                    <option value="">-- Select HMIS Category --</option>
+                                    {% for classification in hmis_classifications %}
+                                        <option value="{{ classification.code }}" {% if medical_record.hmis_classification == classification.code %}selected{% endif %}>
+                                            {{ classification.code }} - {{ classification.name }}
+                                        </option>
+                                    {% empty %}
+                                        <option value="" disabled>No HMIS classifications configured</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-3">
+                                    <i class="fas fa-viruses text-red-600 mr-2"></i>IDSR Disease (if applicable)
+                                </label>
+                                <select name="idsr_classification" class="input-field">
+                                    <option value="">-- Select IDSR Disease --</option>
+                                    {% for code, label in idsr_choices %}
+                                        <option value="{{ code }}" {% if medical_record.idsr_disease == code %}selected{% endif %}>{{ label }}</option>
+                                    {% empty %}
+                                        <option value="" disabled>No IDSR codes configured</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                            <p class="text-sm text-blue-800">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                <strong>Note:</strong> HMIS classification is used for health management information system reporting. IDSR classification is required only for notifiable diseases.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-4 pt-6 border-t">
+                        <button type="button" onclick="closeModal('medicalRecordModal')" class="action-btn bg-gray-500 hover:bg-gray-600 text-white">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                        <button type="submit" name="save_medical_record" class="action-btn bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white">
+                            <i class="fas fa-save"></i> Save Medical Record
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="billingModal" class="module-modal hidden" role="dialog" aria-modal="true" aria-labelledby="billingTitle" aria-hidden="true">
+        <div class="modal-panel bg-white w-full max-w-5xl relative">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-green-500 font-semibold">Module</p>
+                    <h3 id="billingTitle" class="text-2xl font-bold text-gray-900">Billing Sheet</h3>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleAddActForm()" class="action-btn bg-green-600 hover:bg-green-700 text-white text-sm">
+                        <i class="fas fa-plus"></i> Add Medical Act
+                    </button>
+                    <button type="button" class="text-gray-400 hover:text-gray-600 text-2xl" onclick="closeModal('billingModal')" aria-label="Close Billing Sheet">
+                        &times;
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body-scroll p-6 space-y-6">
+                {% if billing_items %}
+                <div class="section-card overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gradient-to-r from-green-500 to-green-600 text-white">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-bold">Medical Act</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold">Details</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold">Quantity</th>
+                                <th class="px-6 py-4 text-right text-sm font-bold">Unit Price</th>
+                                <th class="px-6 py-4 text-right text-sm font-bold">Total</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for item in billing_items %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="font-semibold text-gray-900">{{ item.tariff.name }}</div>
+                                    <div class="text-xs text-gray-500">Code: {{ item.tariff.code }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-blue-600 italic">{{ item.notes|default:"--" }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">{{ item.qty }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-right font-semibold text-gray-700">
+                                    {% if patient.is_insured %}
+                                        {{ item.price_insurance_snapshot|floatformat:0 }} RWF
+                                    {% else %}
+                                        {{ item.price_private_snapshot|floatformat:0 }} RWF
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-right font-bold text-green-600 text-lg">
+                                    {% if patient.is_insured %}
+                                        {% widthratio item.price_insurance_snapshot 1 item.qty %} RWF
+                                    {% else %}
+                                        {% widthratio item.price_private_snapshot 1 item.qty %} RWF
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <form method="post" action="{% url 'doctor-delete-billing-item' item.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" onclick="return confirm('Remove this item?')" class="text-red-600 hover:text-red-800 transition-colors">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="bg-gradient-to-r from-green-50 to-green-100 font-bold">
+                                <td colspan="4" class="px-6 py-4 text-right text-lg">TOTAL AMOUNT:</td>
+                                <td class="px-6 py-4 text-right text-2xl text-green-700">
+                                    {% if patient.is_insured %}
+                                        {{ billing_totals.insurance_total|default:0|floatformat:0 }} RWF
+                                    {% else %}
+                                        {{ billing_totals.private_total|default:0|floatformat:0 }} RWF
+                                    {% endif %}
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="section-card p-12 text-center">
+                    <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500 text-lg">No billing items added yet</p>
+                    <p class="text-gray-400 text-sm">Click "Add Medical Act" to add procedures</p>
+                </div>
+                {% endif %}
+
+                <div id="addActFormWrapper" class="section-card p-6 hidden">
+                    <form method="post" action="{% url 'doctor-add-act' visit.id %}" class="space-y-4">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="text-sm font-semibold text-gray-700 mb-2 block">Select Medical Act/Procedure</label>
+                                <input type="text" id="actSearchInput" placeholder="Type to search medical acts..." class="input-field mb-2" autocomplete="off">
+                                <select name="tariff" id="tariffSelect" required class="input-field" size="8" style="height: 200px; overflow-y: auto;">
+                                    <option value="">-- Select an act --</option>
+                                    {% for tariff in tariffs %}
+                                    <option value="{{ tariff.id }}" data-price-private="{{ tariff.price_private }}" data-price-insurance="{{ tariff.price_insurance }}">
+                                        {{ tariff.name }} - {% if patient.is_insured %}{{ tariff.price_insurance|default:tariff.price_private }}{% else %}{{ tariff.price_private }}{% endif %} RWF
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 mb-2 block">Quantity</label>
+                                <input type="number" name="qty" value="1" min="1" required class="input-field">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 mb-2 block">Details/Notes <span class="text-gray-500 text-xs">(will appear on invoice)</span></label>
+                            <textarea name="details" rows="2" placeholder="Enter additional details or notes about this procedure..." class="input-field w-full"></textarea>
+                        </div>
+                        <div class="flex items-center justify-end gap-3">
+                            <button type="button" onclick="toggleAddActForm()" class="action-btn bg-gray-500 hover:bg-gray-600 text-white">
+                                Cancel
+                            </button>
+                            <button type="submit" class="action-btn bg-green-600 hover:bg-green-700 text-white">
+                                <i class="fas fa-plus"></i> Add to Bill
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-yellow-800">Pricing Note</p>
+                            <p class="text-sm text-yellow-700">You can view prices and adjust acts based on patient capacity to pay. Only administrators can modify actual price tables.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="button" onclick="closeModal('billingModal')" class="action-btn bg-gray-600 hover:bg-gray-700 text-white">
+                        Close Billing Sheet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pharmacyModal" class="module-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pharmacyTitle" aria-hidden="true">
+        <div class="modal-panel bg-white w-full max-w-4xl relative">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-pink-500 font-semibold">Module</p>
+                    <h3 id="pharmacyTitle" class="text-2xl font-bold text-gray-900">Pharmacy & Prescriptions</h3>
+                </div>
+                <button type="button" class="text-gray-400 hover:text-gray-600 text-2xl" onclick="closeModal('pharmacyModal')" aria-label="Close Pharmacy">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body-scroll p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="section-card p-6 cursor-pointer hover:shadow-xl transition-all" onclick="showPrescriptionForm('written')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-pen-fancy text-blue-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-800">Written Prescription</h4>
+                                <p class="text-sm text-gray-600">Write prescription manually</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-card p-6 cursor-pointer hover:shadow-xl transition-all" onclick="showPrescriptionForm('clinic')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clinic-medical text-green-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-800">From Clinic Store</h4>
+                                <p class="text-sm text-gray-600">Select from available medicines</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="written-prescription" class="section-card p-6 hidden">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">Write Prescription</h4>
+                    <form method="post" action="{% url 'doctor-save-prescription' visit.id %}" class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="prescription_type" value="written">
+                        <textarea name="prescription_text" rows="8" class="input-field" placeholder="Write prescription details here...&#10;&#10;Example:&#10;1. Amoxicillin 500mg - 1 tablet three times daily for 7 days&#10;2. Ibuprofen 400mg - 1 tablet as needed for pain&#10;3. Chlorhexidine mouthwash - rinse twice daily"></textarea>
+
+                        <button type="submit" class="action-btn bg-blue-600 hover:bg-blue-700 text-white">
+                            <i class="fas fa-save"></i> Save Prescription
+                        </button>
+                    </form>
+                </div>
+
+                <div id="clinic-prescription" class="section-card p-6 hidden">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">Select from Clinic Store</h4>
+                    
+                    <!-- Medicine Cart -->
+                    <div id="medicineCart" class="mb-4 hidden">
+                        <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h5 class="font-semibold text-blue-900">
+                                    <i class="fas fa-prescription-bottle-alt mr-2"></i>Prescription Cart
+                                </h5>
+                                <span class="text-sm text-blue-700" id="cartCount">0 items</span>
+                            </div>
+                            <div id="cartItems" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <form id="addMedicineForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Medicine</label>
+                                <select id="medicine_id" class="input-field" required>
+                                    <option value="">-- Select Medicine --</option>
+                                    {% if pharmacy_stock %}
+                                        {% for stock in pharmacy_stock %}
+                                            <option value="{{ stock.id }}" 
+                                                    data-name="{{ stock.item.name }}" 
+                                                    data-unit="{{ stock.item.unit|default:'units' }}"
+                                                    data-stock="{{ stock.qty_available }}"
+                                                    {% if stock.qty_available <= 0 %}disabled{% endif %}>
+                                                {{ stock.item.name }}{% if stock.item.unit %} ({{ stock.item.unit }}){% endif %} - Stock: {{ stock.qty_available }}
+                                            </option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option value="" disabled>No medicines available in stock</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity</label>
+                                <input type="number" id="quantity" min="1" class="input-field" required>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Dosage</label>
+                                <input type="text" id="dosage" class="input-field" placeholder="e.g., 250mg, 1 tablet">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Frequency</label>
+                                <input type="text" id="frequency" class="input-field" placeholder="e.g., 3 times daily">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Duration</label>
+                                <input type="text" id="duration" class="input-field" placeholder="e.g., 7 days">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Additional Instructions</label>
+                            <textarea id="instructions" rows="2" class="input-field" placeholder="e.g., Take after meals, avoid alcohol"></textarea>
+                        </div>
+                        <button type="button" onclick="addToCart()" class="action-btn bg-blue-600 hover:bg-blue-700 text-white">
+                            <i class="fas fa-plus-circle"></i> Add Medicine to Cart
+                        </button>
+                    </form>
+
+                    <!-- Save All Button -->
+                    <div id="saveAllSection" class="mt-4 hidden">
+                        <form method="post" action="{% url 'doctor-save-prescription' visit.id %}" id="savePrescriptionForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="prescription_type" value="clinic">
+                            <input type="hidden" name="medicines_data" id="medicinesData">
+                            <button type="submit" class="action-btn bg-green-600 hover:bg-green-700 text-white w-full">
+                                <i class="fas fa-save"></i> Save All Medicines & Generate Invoice
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                        <p class="text-sm text-green-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Add multiple medicines to the cart, then save all at once. Medicines will be available for pharmacy review and cashier billing.
+                        </p>
+                    </div>
+                </div>
+
+                <script>
+                    let medicineCart = [];
+
+                    function addToCart() {
+                        const medicineSelect = document.getElementById('medicine_id');
+                        const quantityInput = document.getElementById('quantity');
+                        const dosageInput = document.getElementById('dosage');
+                        const frequencyInput = document.getElementById('frequency');
+                        const durationInput = document.getElementById('duration');
+                        const instructionsInput = document.getElementById('instructions');
+
+                        if (!medicineSelect.value || !quantityInput.value) {
+                            alert('Please select a medicine and enter quantity');
+                            return;
+                        }
+
+                        const selectedOption = medicineSelect.options[medicineSelect.selectedIndex];
+                        const medicineId = medicineSelect.value;
+                        const medicineName = selectedOption.dataset.name;
+                        const medicineUnit = selectedOption.dataset.unit;
+                        const stockAvailable = parseInt(selectedOption.dataset.stock);
+                        const quantity = parseInt(quantityInput.value);
+
+                        // Check if already in cart
+                        const existingIndex = medicineCart.findIndex(item => item.id === medicineId);
+                        const existingQty = existingIndex >= 0 ? medicineCart[existingIndex].quantity : 0;
+
+                        if (existingQty + quantity > stockAvailable) {
+                            alert(`Not enough stock! Available: ${stockAvailable}, Already in cart: ${existingQty}`);
+                            return;
+                        }
+
+                        const item = {
+                            id: medicineId,
+                            name: medicineName,
+                            unit: medicineUnit,
+                            quantity: quantity,
+                            dosage: dosageInput.value,
+                            frequency: frequencyInput.value,
+                            duration: durationInput.value,
+                            instructions: instructionsInput.value
+                        };
+
+                        if (existingIndex >= 0) {
+                            medicineCart[existingIndex].quantity += quantity;
+                        } else {
+                            medicineCart.push(item);
+                        }
+
+                        updateCartDisplay();
+                        
+                        // Clear form
+                        quantityInput.value = '';
+                        dosageInput.value = '';
+                        frequencyInput.value = '';
+                        durationInput.value = '';
+                        instructionsInput.value = '';
+                        medicineSelect.value = '';
+                    }
+
+                    function removeFromCart(index) {
+                        medicineCart.splice(index, 1);
+                        updateCartDisplay();
+                    }
+
+                    function updateCartDisplay() {
+                        const cartDiv = document.getElementById('medicineCart');
+                        const cartItemsDiv = document.getElementById('cartItems');
+                        const cartCount = document.getElementById('cartCount');
+                        const saveAllSection = document.getElementById('saveAllSection');
+                        const medicinesDataInput = document.getElementById('medicinesData');
+
+                        if (medicineCart.length === 0) {
+                            cartDiv.classList.add('hidden');
+                            saveAllSection.classList.add('hidden');
+                            return;
+                        }
+
+                        cartDiv.classList.remove('hidden');
+                        saveAllSection.classList.remove('hidden');
+                        cartCount.textContent = `${medicineCart.length} item${medicineCart.length > 1 ? 's' : ''}`;
+
+                        cartItemsDiv.innerHTML = medicineCart.map((item, index) => `
+                            <div class="bg-white border border-blue-200 rounded-lg p-3 flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="font-semibold text-gray-800">${item.name}</div>
+                                    <div class="text-sm text-gray-600 mt-1">
+                                        <span class="font-medium">Qty:</span> ${item.quantity} ${item.unit}
+                                        ${item.dosage ? ` | <span class="font-medium">Dosage:</span> ${item.dosage}` : ''}
+                                        ${item.frequency ? ` | <span class="font-medium">Freq:</span> ${item.frequency}` : ''}
+                                        ${item.duration ? ` | <span class="font-medium">Duration:</span> ${item.duration}` : ''}
+                                    </div>
+                                    ${item.instructions ? `<div class="text-xs text-gray-500 mt-1">${item.instructions}</div>` : ''}
+                                </div>
+                                <button type="button" onclick="removeFromCart(${index})" class="text-red-600 hover:text-red-800 ml-2">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+                        `).join('');
+
+                        // Update hidden field with JSON data
+                        medicinesDataInput.value = JSON.stringify(medicineCart);
+                    }
+                </script>
+
+                <div class="section-card p-6">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">Recorded Prescriptions</h4>
+                    {% if prescriptions %}
+                        <div class="space-y-4 max-h-72 overflow-y-auto pr-1">
+                            {% for prescription in prescriptions %}
+                                <div class="border border-gray-100 rounded-xl p-4 bg-white shadow-sm">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div>
+                                            <span class="text-xs uppercase tracking-wide font-bold text-purple-700">{{ prescription.get_prescription_type_display }}</span>
+                                            <p class="text-sm text-gray-500">Saved on {{ prescription.created_at|date:"M d, Y - h:i A" }} by
+                                                {% if prescription.doctor %}
+                                                    {{ prescription.doctor.user.get_full_name|default:prescription.doctor.user.username }}
+                                                {% else %}
+                                                    System
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-semibold text-gray-400">#{{ forloop.counter }}</span>
+                                            <form method="post" action="{% url 'doctor-delete-prescription' prescription.id %}" onsubmit="return confirm('Are you sure you want to delete this prescription?');" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="text-red-600 hover:text-red-800 hover:bg-red-50 p-1.5 rounded transition-colors" title="Delete Prescription">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    {% if prescription.prescription_type == 'written' %}
+                                        <pre class="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 whitespace-pre-wrap">{{ prescription.instructions }}</pre>
+                                    {% else %}
+                                        <ul class="space-y-2">
+                                            {% for item in prescription.items.all %}
+                                                <li class="flex items-center justify-between text-sm text-gray-700">
+                                                    <div>
+                                                        <strong>{{ item.display_name }}</strong>
+                                                        <span class="text-gray-500">x {{ item.quantity }}</span>
+                                                    </div>
+                                                    {% if item.dosage_instructions %}
+                                                        <span class="text-gray-500">{{ item.dosage_instructions }}</span>
+                                                    {% endif %}
+                                                </li>
+                                            {% empty %}
+                                                <li class="text-sm text-gray-500">No medicines recorded for this entry.</li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% if prescription.instructions %}
+                                            <p class="text-sm text-gray-500 mt-2"><strong>Dosage:</strong> {{ prescription.instructions }}</p>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">No prescriptions recorded for this visit yet.</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="button" onclick="closeModal('pharmacyModal')" class="action-btn bg-gray-600 hover:bg-gray-700 text-white">
+                        Close Pharmacy Module
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="vitalModal" class="module-modal hidden" role="dialog" aria-modal="true" aria-labelledby="vitalTitle" aria-hidden="true">
+        <div class="modal-panel bg-white w-full max-w-4xl relative">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-red-500 font-semibold">Module</p>
+                    <h3 id="vitalTitle" class="text-2xl font-bold text-gray-900">Vital Signs & Triage</h3>
+                </div>
+                <button type="button" class="text-gray-400 hover:text-gray-600 text-2xl" onclick="closeModal('vitalModal')" aria-label="Close Vital Signs">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body-scroll p-6">
+                <form method="post" action="{% url 'doctor-save-triage' visit.id %}" class="space-y-6">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-heart-pulse text-red-500 mr-2"></i>Blood Pressure
+                            </label>
+                            <input type="text" name="blood_pressure" value="{{ triage.blood_pressure }}" placeholder="e.g. 120/80" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-thermometer text-orange-500 mr-2"></i>Temperature (°C)
+                            </label>
+                            <input type="number" step="0.1" name="temperature" value="{{ triage.temperature_c }}" placeholder="37.0" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-heartbeat text-pink-500 mr-2"></i>Pulse (bpm)
+                            </label>
+                            <input type="number" name="pulse" value="{{ triage.pulse }}" placeholder="72" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-lungs text-blue-500 mr-2"></i>Respiratory Rate
+                            </label>
+                            <input type="number" name="respiratory_rate" value="{{ triage.respiratory_rate }}" placeholder="16" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-weight text-green-500 mr-2"></i>Weight (kg)
+                            </label>
+                            <input type="number" step="0.1" name="weight" value="{{ visit.weight_kg }}" placeholder="70" class="input-field">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl">
+                            <div class="text-sm text-purple-600 font-semibold mb-1">Body Mass Index (BMI)</div>
+                            <div class="text-2xl font-bold text-purple-800">--</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl">
+                            <div class="text-sm text-blue-600 font-semibold mb-1">Blood Pressure Status</div>
+                            <div class="text-lg font-bold text-blue-800">{{ triage.blood_pressure|default:"Not recorded" }}</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl">
+                            <div class="text-sm text-orange-600 font-semibold mb-1">Temperature Status</div>
+                            <div class="text-lg font-bold text-orange-800">{{ triage.temperature_c|default:"--" }}{% if triage.temperature_c %}°C{% endif %}</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-notes-medical text-gray-600 mr-2"></i>Additional Notes
+                        </label>
+                        <textarea name="notes" rows="3" class="input-field" placeholder="Any additional vital signs notes or observations...">{{ triage.notes }}</textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <button type="button" onclick="closeModal('vitalModal')" class="action-btn bg-gray-500 hover:bg-gray-600 text-white">
+                            Cancel
+                        </button>
+                        <button type="submit" class="action-btn bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white">
+                            <i class="fas fa-save"></i> Save Vital Signs
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Dashboard Button -->
+    <div class="flex justify-center">
+        <a href="{% url 'waiting_queue' %}" class="action-btn bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white">
+            <i class="fas fa-arrow-left"></i> Back to Waiting Queue
+        </a>
+    </div>
+</div>
+
+<!-- Schedule Appointment Modal -->
+<div id="appointmentModal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-2xl font-bold"><i class="fas fa-calendar-plus mr-2"></i>Schedule Appointment</h3>
+                <button onclick="closeModal('appointmentModal')" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <form method="post" action="{% url 'doctor-create-appointment' visit.id %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="return_to" value="visit_detail">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Appointment Date</label>
+                <input type="date" name="appointment_date" required class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Appointment Time</label>
+                <input type="time" name="appointment_time" required class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Department</label>
+                <select name="department" class="input-field">
+                    <option value="">Use current department</option>
+                    {% for department in departments %}
+                        <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% empty %}
+                        <option value="" disabled>No departments configured</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Assign Doctor</label>
+                <select name="doctor" class="input-field">
+                    <option value="">Assign to me</option>
+                    {% for doctor in peer_doctors %}
+                        <option value="{{ doctor.id }}">Dr. {{ doctor.user.get_full_name }} {% if doctor.department %}({{ doctor.department.name }}){% endif %}</option>
+                    {% empty %}
+                        <option value="" disabled>No other doctors found</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Purpose / Notes</label>
+                <textarea name="appointment_notes" rows="3" class="input-field" placeholder="Reason for appointment..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" onclick="closeModal('appointmentModal')" class="action-btn bg-gray-500 hover:bg-gray-600 text-white">
+                    Cancel
+                </button>
+                <button type="submit" class="action-btn bg-green-600 hover:bg-green-700 text-white">
+                    <i class="fas fa-check mr-2"></i>Schedule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Medical Certificate Modal -->
+<div id="certificateModal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 p-6 text-white rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-2xl font-bold"><i class="fas fa-certificate mr-2"></i>Generate Medical Certificate</h3>
+                <button onclick="closeModal('certificateModal')" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <form method="post" action="{% url 'generate_medical_certificate' visit.id %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Certificate Type</label>
+                <select name="certificate_type" required class="input-field">
+                    <option value="">-- Select Type --</option>
+                    <option value="fitness">Fitness Certificate</option>
+                    <option value="sick">Sick Leave Certificate</option>
+                    <option value="medical">Medical Report</option>
+                    <option value="treatment">Treatment Certificate</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Diagnosis/Condition</label>
+                <textarea name="diagnosis" rows="3" class="input-field" placeholder="Medical condition or diagnosis..." required></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Recommendation</label>
+                <textarea name="recommendation" rows="3" class="input-field" placeholder="Medical recommendations..."></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Valid Until</label>
+                <input type="date" name="valid_until" class="input-field">
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" onclick="closeModal('certificateModal')" class="action-btn bg-gray-500 hover:bg-gray-600 text-white">
+                    Cancel
+                </button>
+                <button type="submit" class="action-btn bg-purple-600 hover:bg-purple-700 text-white">
+                    <i class="fas fa-file-certificate mr-2"></i>Generate
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Medical Leave Modal -->
+<div id="leaveModal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="bg-gradient-to-r from-pink-600 to-pink-700 p-6 text-white rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-2xl font-bold"><i class="fas fa-file-medical mr-2"></i>Medical Leave Form</h3>
+                <button onclick="closeModal('leaveModal')" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <form method="post" action="#" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Leave Start Date</label>
+                <input type="date" name="leave_start" required class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Leave End Date</label>
+                <input type="date" name="leave_end" required class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Number of Days</label>
+                <input type="number" name="leave_days" min="1" required class="input-field" placeholder="Days of leave">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Reason for Leave</label>
+                <textarea name="leave_reason" rows="3" class="input-field" placeholder="Medical reason for leave..." required></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" onclick="closeModal('leaveModal')" class="action-btn bg-gray-500 hover:bg-gray-600 text-white">
+                    Cancel
+                </button>
+                <button type="submit" class="action-btn bg-pink-600 hover:bg-pink-700 text-white">
+                    <i class="fas fa-check mr-2"></i>Generate Leave
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transfer Patient Modal -->
+<div id="transferModal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="bg-gradient-to-r from-orange-600 to-orange-700 p-6 text-white rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-2xl font-bold"><i class="fas fa-exchange-alt mr-2"></i>Transfer Patient</h3>
+                <button onclick="closeModal('transferModal')" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <form method="post" action="{% url 'transfer_patient' visit.id %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="return_to" value="visit_detail">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Transfer To Department</label>
+                <select name="to_department" class="input-field">
+                    <option value="">-- Select Department --</option>
+                    {% for department in departments %}
+                        <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% empty %}
+                        <option value="" disabled>No departments configured</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Transfer To Doctor</label>
+                <select name="to_doctor" class="input-field">
+                    <option value="">-- Select Doctor (Optional) --</option>
+                    {% for doctor in peer_doctors %}
+                        <option value="{{ doctor.id }}">Dr. {{ doctor.user.get_full_name }} {% if doctor.department %}({{ doctor.department.name }}){% endif %}</option>
+                    {% empty %}
+                        <option value="" disabled>No other doctors available</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Reason for Transfer</label>
+                <textarea name="reason" rows="3" class="input-field" placeholder="Reason for transferring patient..." required></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Clinical Notes</label>
+                <textarea name="notes" rows="2" class="input-field" placeholder="Additional clinical information..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" onclick="closeModal('transferModal')" class="action-btn bg-gray-500 hover:bg-gray-600 text-white">
+                    Cancel
+                </button>
+                <button type="submit" class="action-btn bg-orange-600 hover:bg-orange-700 text-white">
+                    <i class="fas fa-exchange-alt mr-2"></i>Transfer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Modal helpers for clinical modules and legacy overlays
+    function syncBodyScrollState() {
+        const hasOpenModal = document.querySelector('.module-modal:not(.hidden), .modal-overlay:not(.hidden)');
+        document.body.style.overflow = hasOpenModal ? 'hidden' : 'auto';
+    }
+
+    // Prescription Form Toggle
+    function showPrescriptionForm(type) {
+        document.getElementById('written-prescription').classList.add('hidden');
+        document.getElementById('clinic-prescription').classList.add('hidden');
+        
+        if (type === 'written') {
+            document.getElementById('written-prescription').classList.remove('hidden');
+        } else {
+            document.getElementById('clinic-prescription').classList.remove('hidden');
+        }
+    }
+
+    // Auto-save functionality (optional)
+    let autoSaveTimer;
+    document.querySelectorAll('textarea, input').forEach(field => {
+        field.addEventListener('input', () => {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                console.log('Auto-saving...');
+                // Implement auto-save logic here
+            }, 3000);
+        });
+    });
+
+    // BMI Calculator
+    const weightInput = document.querySelector('input[name="weight"]');
+    const heightInput = document.querySelector('input[name="height"]');
+    
+    function calculateBMI() {
+        const weight = parseFloat(weightInput?.value);
+        const height = parseFloat(heightInput?.value) / 100; // convert cm to m
+        
+        if (weight && height) {
+            const bmi = (weight / (height * height)).toFixed(1);
+            // Update BMI display if element exists
+            const bmiDisplay = document.querySelector('.text-2xl.font-bold.text-purple-800');
+            if (bmiDisplay) {
+                bmiDisplay.textContent = bmi;
+            }
+        }
+    }
+    
+    weightInput?.addEventListener('input', calculateBMI);
+    heightInput?.addEventListener('input', calculateBMI);
+
+    // Form validation before submit
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('border-red-500');
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields');
+            }
+        });
+    });
+
+    // Print functionality
+    window.addEventListener('beforeprint', () => {
+        // Hide navigation and buttons before printing
+        document.querySelector('aside')?.classList.add('hidden');
+        document.querySelector('header')?.classList.add('hidden');
+        document.querySelectorAll('.action-btn')?.forEach(btn => btn.classList.add('hidden'));
+    });
+
+    window.addEventListener('afterprint', () => {
+        // Show navigation and buttons after printing
+        document.querySelector('aside')?.classList.remove('hidden');
+        document.querySelector('header')?.classList.remove('hidden');
+        document.querySelectorAll('.action-btn')?.forEach(btn => btn.classList.remove('hidden'));
+    });
+
+    // Modal functionality - defined globally
+    window.openModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            syncBodyScrollState();
+        } else {
+            console.error('Modal not found:', modalId);
+        }
+    }
+
+    window.closeModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            syncBodyScrollState();
+        }
+    }
+
+    window.toggleAddActForm = function() {
+        const wrapper = document.getElementById('addActFormWrapper');
+        if (!wrapper) {
+            return;
+        }
+        const willShow = wrapper.classList.contains('hidden');
+        wrapper.classList.toggle('hidden');
+        if (willShow) {
+            wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const select = wrapper.querySelector('select[name="tariff"]');
+            if (select) {
+                select.focus();
+            }
+        }
+    }
+
+    // Send to Cashier functionality
+    window.sendToCashier = function() {
+        if (confirm('Send this visit to cashier for payment?\n\nMake sure all billing items are added and medical records are complete.')) {
+            window.location.href = "{% url 'send_to_cashier' visit.id %}?return_to=visit_detail";
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.modal-overlay, .module-modal').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeModal(overlay.id);
+                }
+            });
+        });
+    });
+
+    // Medical Act Search Functionality
+    const actSearchInput = document.getElementById('actSearchInput');
+    const tariffSelect = document.getElementById('tariffSelect');
+    
+    if (actSearchInput && tariffSelect) {
+        const allOptions = Array.from(tariffSelect.options);
+        
+        actSearchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            allOptions.forEach((option, index) => {
+                if (index === 0) {
+                    option.style.display = 'block';
+                    return;
+                }
+                
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Reset selection if search is cleared
+            if (searchTerm === '') {
+                tariffSelect.selectedIndex = 0;
+            }
+        });
+        
+        // Clear search when an option is selected
+        tariffSelect.addEventListener('change', function() {
+            if (this.value) {
+                actSearchInput.value = '';
+                allOptions.forEach(option => {
+                    option.style.display = 'block';
+                });
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay:not(.hidden), .module-modal:not(.hidden)').forEach(modal => {
+                closeModal(modal.id);
+            });
+        }
+    });
+</script>
+{% endblock %}

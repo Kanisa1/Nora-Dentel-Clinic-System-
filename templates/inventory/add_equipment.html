@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Equipment - Nora Dental Clinic{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white mb-1">Add New Equipment</h2>
+            <p class="text-muted mb-0">Register new fixed assets and equipment</p>
+        </div>
+        <a href="{% url 'inventory_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back
+        </a>
+    </div>
+
+    <!-- Main Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <form method="POST" id="equipmentForm">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="form-group-section">
+                        <h6 class="section-header">Basic Information</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Asset Code <span class="required">*</span></label>
+                                <input type="text" name="asset_code" class="form-control" required placeholder="e.g., EQUIP-001">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Asset Type <span class="required">*</span></label>
+                                <select name="asset_type" class="form-select" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option value="equipment">Equipment</option>
+                                    <option value="furniture">Furniture</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="vehicle">Vehicle</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Asset Name <span class="required">*</span></label>
+                            <input type="text" name="asset_name" class="form-control" required placeholder="Enter equipment name">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Brief description of the equipment"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Purchase Information -->
+                    <div class="form-group-section">
+                        <h6 class="section-header">Purchase Information</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Purchase Date <span class="required">*</span></label>
+                                <input type="date" name="purchase_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Purchase Cost (RWF) <span class="required">*</span></label>
+                                <input type="number" name="purchase_cost" class="form-control" required placeholder="0.00" min="0" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Supplier</label>
+                                <input type="text" name="supplier" class="form-control" placeholder="Supplier name">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Serial Number</label>
+                                <input type="text" name="serial_number" class="form-control" placeholder="Serial/Model number">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Warranty Expiry Date</label>
+                            <input type="date" name="warranty_expiry" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Asset Details -->
+                    <div class="form-group-section">
+                        <h6 class="section-header">Asset Details</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Location</label>
+                                <input type="text" name="location" class="form-control" placeholder="Physical location">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Useful Life (Years)</label>
+                                <input type="number" name="useful_life" class="form-control" placeholder="5" min="1" value="5">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="active">Active</option>
+                                <option value="maintenance">Under Maintenance</option>
+                                <option value="damaged">Damaged</option>
+                                <option value="disposed">Disposed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Equipment
+                        </button>
+                        <a href="{% url 'inventory_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Sidebar -->
+        <div class="col-lg-4">
+            <div class="info-box">
+                <h6><i class="fas fa-info-circle me-2"></i>Guidelines</h6>
+                <ul>
+                    <li>Use unique asset codes for easy identification</li>
+                    <li>Record accurate purchase information for accounting</li>
+                    <li>Specify the physical location for easy tracking</li>
+                    <li>Set appropriate useful life for depreciation</li>
+                    <li>Update status as equipment condition changes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-container {
+        background: #ffffff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        color: #1f2937;
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #3b82f6;
+    }
+
+    .form-label {
+        color: #374151;
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        color: #1f2937;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.95rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+    .required {
+        color: #dc2626;
+    }
+
+    .form-actions {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-primary {
+        background-color: #3b82f6;
+        border: none;
+        color: #ffffff;
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+        background-color: #2563eb;
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+        border: none;
+        color: #ffffff;
+        padding: 0.625rem 1.5rem;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    .info-box {
+        background: #ffffff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 20px;
+    }
+
+    .info-box h6 {
+        color: #1f2937;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .info-box ul {
+        padding-left: 1.25rem;
+        margin: 0;
+    }
+
+    .info-box li {
+        color: #4b5563;
+        margin-bottom: 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    h2 {
+        font-weight: 600;
+    }
+
+    .text-muted {
+        color: #6b7280 !important;
+    }
+
+    @media (max-width: 991px) {
+        .form-container {
+            padding: 1.5rem;
+        }
+        .info-box {
+            margin-top: 1.5rem;
+            position: static;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('equipmentForm');
+        
+        form.addEventListener('submit', function(e) {
+            const assetCode = form.querySelector('[name="asset_code"]').value;
+            const assetName = form.querySelector('[name="asset_name"]').value;
+            const assetType = form.querySelector('[name="asset_type"]').value;
+            const purchaseDate = form.querySelector('[name="purchase_date"]').value;
+            const purchaseCost = form.querySelector('[name="purchase_cost"]').value;
+            
+            if (!assetCode || !assetName || !assetType || !purchaseDate || !purchaseCost) {
+                e.preventDefault();
+                alert('Please fill in all required fields');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

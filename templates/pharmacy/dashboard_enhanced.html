@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pharmacy Dashboard - Nora Dental Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-pills"></i>
+        Pharmacy Dashboard
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stock Status Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-clinic-purple hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Total Stock Items</p>
+                    <p class="text-3xl font-bold text-clinic-purple mt-2">{{ total_medicines|default:0 }}</p>
+                </div>
+                <i class="fas fa-boxes text-4xl text-clinic-light"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Low Stock Alert</p>
+                    <p class="text-3xl font-bold text-red-600 mt-2">{{ low_stock_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-exclamation-triangle text-4xl text-red-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Expiring Soon</p>
+                    <p class="text-3xl font-bold text-yellow-600 mt-2">{{ expired_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-calendar-times text-4xl text-yellow-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Dispensed Today</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2">{{ today_dispensed|default:0 }}</p>
+                </div>
+                <i class="fas fa-hand-holding-medical text-4xl text-green-100"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Low Stock Items -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-box-open text-red-600"></i>
+                Low Stock Items
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Medicine</th>
+                            <th class="px-4 py-2 text-center font-semibold text-gray-700">Qty</th>
+                            <th class="px-4 py-2 text-center font-semibold text-gray-700">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        {% for stock in low_stock_items %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-2 font-semibold">{{ stock.item.name }}</td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">
+                                        {{ stock.qty_available }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="text-red-600 text-xs font-semibold">
+                                        <i class="fas fa-exclamation-circle"></i> Low
+                                    </span>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="px-4 py-6 text-center text-gray-500">
+                                    <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                                    <br>All items well stocked
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Expiring Items -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-calendar-alt text-yellow-600"></i>
+                Expiring Soon (30 days)
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Medicine</th>
+                            <th class="px-4 py-2 text-center font-semibold text-gray-700">Expiry Date</th>
+                            <th class="px-4 py-2 text-center font-semibold text-gray-700">Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        {% for stock in expired_items %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-2 font-semibold">{{ stock.item.name }}</td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="text-yellow-700 text-xs">{{ stock.expiry_date|date:"M d, Y" }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-center text-gray-600">{{ stock.qty_available }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="px-4 py-6 text-center text-gray-500">
+                                    <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                                    <br>No items expiring soon
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Prescriptions -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-prescription text-clinic-purple"></i>
+            Recent Prescriptions
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Date</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Doctor</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Type</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Items</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for prescription in recent_prescriptions %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2">{{ prescription.created_at|date:"M d, H:i" }}</td>
+                            <td class="px-4 py-2 font-semibold">
+                                {{ prescription.patient.first_name }} {{ prescription.patient.last_name }}
+                            </td>
+                            <td class="px-4 py-2">
+                                Dr. {{ prescription.doctor.user.first_name }} {{ prescription.doctor.user.last_name }}
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+                                    {{ prescription.get_prescription_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-gray-600">
+                                {{ prescription.items.count }} item{{ prescription.items.count|pluralize }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-gray-500">No prescriptions yet</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Today's Dispensing Activity -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-history text-green-600"></i>
+            Today's Dispensing Activity
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Time</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Medicine</th>
+                        <th class="px-4 py-2 text-center font-semibold text-gray-700">Quantity</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for dispense in today_dispensing %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2">{{ dispense.dispensed_at|time:"H:i" }}</td>
+                            <td class="px-4 py-2 font-semibold">
+                                {{ dispense.prescription.patient.first_name }} {{ dispense.prescription.patient.last_name }}
+                            </td>
+                            <td class="px-4 py-2">{{ dispense.pharmacy_stock.item.name }}</td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">
+                                    {{ dispense.qty }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-4 py-6 text-center text-gray-500">No dispensing activity today</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Critical Alerts -->
+    {% if critical_items %}
+    <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
+        <div class="flex items-start gap-4">
+            <i class="fas fa-exclamation-circle text-red-600 text-3xl mt-1"></i>
+            <div class="flex-1">
+                <h3 class="font-bold text-red-800 mb-2 text-lg">Critical Stock Alerts</h3>
+                <p class="text-red-700 text-sm mb-3">
+                    {{ critical_items|length }} item{{ critical_items|length|pluralize }} require immediate attention
+                </p>
+                <div class="space-y-2">
+                    {% for item in critical_items %}
+                        <div class="bg-white rounded p-3 border border-red-200">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-gray-800">{{ item.item.name }}</span>
+                                <div class="flex gap-3 text-xs">
+                                    <span class="text-red-600">
+                                        <i class="fas fa-box"></i> Qty: {{ item.qty_available }}
+                                    </span>
+                                    {% if item.expiry_date %}
+                                    <span class="text-yellow-600">
+                                        <i class="fas fa-calendar"></i> Exp: {{ item.expiry_date|date:"M d, Y" }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

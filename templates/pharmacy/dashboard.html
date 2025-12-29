@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pharmacy Dashboard - Nora Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-pills"></i>
+        Pharmacy Dashboard
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stock Status Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-clinic-purple hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Total Items</p>
+                    <p class="text-3xl font-bold text-clinic-purple mt-2">{{ total_medicines|default:0 }}</p>
+                </div>
+                <i class="fas fa-boxes text-4xl text-clinic-light"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Low Stock</p>
+                    <p class="text-3xl font-bold text-red-600 mt-2">{{ low_stock_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-exclamation-circle text-4xl text-red-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Expiring Soon</p>
+                    <p class="text-3xl font-bold text-yellow-600 mt-2">{{ expired_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-calendar-times text-4xl text-yellow-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Dispensed Today</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2">{{ today_dispensed|default:0 }}</p>
+                </div>
+                <i class="fas fa-hand-holding-medical text-4xl text-green-100"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Pending Prescriptions -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-prescription-bottle text-clinic-purple"></i>
+                Pending Prescriptions
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Medicine</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Qty</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Doctor</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        {% for prescription in pending_prescriptions|default:"" %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-2 font-semibold">{{ prescription.visit.patient.first_name }}</td>
+                                <td class="px-4 py-2 text-gray-600 text-xs">{{ prescription.instructions|truncatewords:5 }}</td>
+                                <td class="px-4 py-2">—</td>
+                                <td class="px-4 py-2">Dr. {{ prescription.visit.doctor.user.first_name }}</td>
+                                <td class="px-4 py-2">
+                                    <button class="bg-clinic-purple text-white px-3 py-1 rounded text-xs font-semibold hover:bg-clinic-dark transition">
+                                        Dispense
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="px-4 py-6 text-center text-gray-500">No pending prescriptions</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-lightning-bolt text-clinic-purple"></i>
+                Quick Actions
+            </h3>
+            <div class="space-y-3">
+                <a href="{% url 'pharmacy_dispensing' %}" class="w-full bg-clinic-purple hover:bg-clinic-dark text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-prescription-bottle"></i> Dispense Med
+                </a>
+                <a href="{% url 'pharmacy_stock' %}" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-box"></i> Stock In
+                </a>
+                <a href="{% url 'pharmacy_medicines' %}" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-boxes"></i> View Stock
+                </a>
+                <a href="{% url 'pharmacy_alerts' %}" class="w-full border-2 border-clinic-purple text-clinic-purple hover:bg-clinic-light py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-bell"></i> Alerts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
+        <div class="flex items-start gap-4">
+            <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl mt-1"></i>
+            <div class="flex-1">
+                <h3 class="font-bold text-yellow-800 mb-2">Low Stock Alert</h3>
+                <p class="text-yellow-700 text-sm mb-3">{{ low_stock_count|default:"No items"|add:" items require restocking" }}</p>
+                <a href="{% url 'pharmacy_stock' %}" class="text-yellow-700 hover:text-yellow-900 font-semibold text-sm flex items-center gap-2">
+                    <i class="fas fa-arrow-right"></i> View Low Stock
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Dispensing -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-history text-clinic-purple"></i>
+            Today's Dispensing
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Time</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Medicine</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Quantity</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for dispensing in today_dispensing|default:"" %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2">{{ dispensing.created_at|time:"H:i" }}</td>
+                            <td class="px-4 py-2">{{ dispensing.patient.first_name }}</td>
+                            <td class="px-4 py-2">{{ dispensing.medicine.name }}</td>
+                            <td class="px-4 py-2 font-semibold">{{ dispensing.quantity }}</td>
+                            <td class="px-4 py-2">
+                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Dispensed</span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-gray-500">No dispensing today</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+}
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Doctor Dashboard - Nora Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-stethoscope"></i>
+        Doctor Dashboard
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Today's Schedule Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-clinic-purple hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Today's Patients</p>
+                    <p class="text-3xl font-bold text-clinic-purple mt-2">{{ patients_today|default:0 }}</p>
+                </div>
+                <i class="fas fa-users text-4xl text-clinic-light"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Waiting</p>
+                    <p class="text-3xl font-bold text-yellow-600 mt-2">{{ waiting_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-user-clock text-4xl text-yellow-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">In Consultation</p>
+                    <p class="text-3xl font-bold text-blue-600 mt-2">{{ in_consultation|default:0 }}</p>
+                </div>
+                <i class="fas fa-user-md text-4xl text-blue-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Completed</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2">{{ completed|default:0 }}</p>
+                </div>
+                <i class="fas fa-check-circle text-4xl text-green-100"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Waiting Queue -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-chair text-clinic-purple"></i>
+                Waiting Queue
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">#</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient Name</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Age</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Gender</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Checked In</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        {% for queue in waiting_queue|default:"" %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-2 font-bold text-clinic-purple">#{{ queue.position }}</td>
+                                <td class="px-4 py-2 font-semibold">{{ queue.visit.patient.first_name }} {{ queue.visit.patient.last_name }}</td>
+                                <td class="px-4 py-2">{{ queue.visit.patient.age|default:"—" }}</td>
+                                <td class="px-4 py-2">
+                                    {% if queue.visit.patient.gender == 'M' %}
+                                        <span class="text-blue-600"><i class="fas fa-mars"></i> Male</span>
+                                    {% elif queue.visit.patient.gender == 'F' %}
+                                        <span class="text-pink-600"><i class="fas fa-venus"></i> Female</span>
+                                    {% else %}
+                                        <span class="text-gray-600">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-2 text-gray-600">{{ queue.checked_in_at|time:"H:i" }}</td>
+                                <td class="px-4 py-2">
+                                    <a href="{% url 'doctor_clinical_record' queue.visit.id %}" class="bg-clinic-purple text-white px-3 py-1 rounded text-xs font-semibold hover:bg-clinic-dark transition">
+                                        Open
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="px-4 py-6 text-center text-gray-500">
+                                    <i class="fas fa-inbox text-2xl"></i>
+                                    <p class="mt-2">No patients waiting</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-lightning-bolt text-clinic-purple"></i>
+                Quick Actions
+            </h3>
+            <div class="space-y-3">
+                <a href="{% url 'doctor_patient_list' %}" class="w-full bg-clinic-purple hover:bg-clinic-dark text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-file-medical"></i> Clinical Record
+                </a>
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-prescription"></i> Prescriptions
+                </button>
+                <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-certificate"></i> Medical Leave
+                </button>
+                <button class="w-full border-2 border-clinic-purple text-clinic-purple hover:bg-clinic-light py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-clock"></i> My Schedule
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Completed Patients -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-check-circle text-clinic-purple"></i>
+            Completed Consultations Today
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Age</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Duration</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Notes</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for visit in completed_visits|default:"" %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 font-semibold">{{ visit.patient.first_name }} {{ visit.patient.last_name }}</td>
+                            <td class="px-4 py-2">{{ visit.patient.age|default:"—" }}</td>
+                            <td class="px-4 py-2 text-gray-600">~15 min</td>
+                            <td class="px-4 py-2 text-gray-600">{{ visit.clinical_notes|default:"—"|truncatewords:5 }}</td>
+                            <td class="px-4 py-2">
+                                {% if visit.status == 'billed' %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Billed</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">Completed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-gray-500">No completed consultations yet today</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Create Patient Visit - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-file-medical"></i> Create Patient Visit
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'reception_dashboard' %}" class="nav-link">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_create_visit' %}" class="nav-link active">
+            <i class="fas fa-file-medical"></i> Create Visit
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Register patient and send to doctor</div>
+
+    <div class="form-container" style="max-width: 700px;">
+        <form method="post" id="createVisitForm">
+            {% csrf_token %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <h3 style="color: #8B3A8B; margin-bottom: 20px;">Patient & Appointment Details</h3>
+
+            <!-- Patient Selection -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Select Patient *</label>
+                    <select name="patient_id" id="patientSelect" required onchange="updatePatientInfo()">
+                        <option value="">-- Choose Patient --</option>
+                        {% for patient in patients %}
+                            <option value="{{ patient.id }}" 
+                                data-name="{{ patient.first_name }} {{ patient.last_name }}"
+                                data-age="{{ patient.age }}"
+                                data-phone="{{ patient.phone }}"
+                                data-insured="{{ patient.is_insured }}"
+                                data-insurer="{{ patient.insurer }}"
+                                data-membership="{{ patient.membership_number }}">
+                                {{ patient.first_name }} {{ patient.last_name }} (ID: {{ patient.id }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Department Selection -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Select Department *</label>
+                    <select name="department_id" id="departmentSelect" required onchange="updateDoctors()">
+                        <option value="">-- Choose Department --</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Doctor Selection -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Select Doctor *</label>
+                    <select name="doctor_id" id="doctorSelect" required>
+                        <option value="">-- Select Department First --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Insurance Coverage Percentage -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Insurance Coverage % (for insured patients)</label>
+                    <select name="insurance_coverage_pct">
+                        <option value="0">0%</option>
+                        <option value="5">5%</option>
+                        <option value="10">10%</option>
+                        <option value="15">15%</option>
+                        <option value="20">20%</option>
+                        <option value="25">25%</option>
+                        <option value="30">30%</option>
+                        <option value="35">35%</option>
+                        <option value="40">40%</option>
+                        <option value="45">45%</option>
+                        <option value="50">50%</option>
+                        <option value="55">55%</option>
+                        <option value="60">60%</option>
+                        <option value="65">65%</option>
+                        <option value="70">70%</option>
+                        <option value="75">75%</option>
+                        <option value="80">80%</option>
+                        <option value="85">85%</option>
+                        <option value="90">90%</option>
+                        <option value="95">95%</option>
+                        <option value="100">100%</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Patient Info Display -->
+            <div id="patientInfo" style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; display: none;">
+                <h4 style="color: #8B3A8B; margin-bottom: 10px;">Patient Information</h4>
+                <p><strong>Name:</strong> <span id="infoName">-</span></p>
+                <p><strong>Age:</strong> <span id="infoAge">-</span></p>
+                <p><strong>Phone:</strong> <span id="infoPhone">-</span></p>
+                <p><strong>Insurance:</strong> <span id="infoInsurance">-</span></p>
+                <p><strong>Insurer:</strong> <span id="infoInsurer">-</span></p>
+                <p><strong>Membership #:</strong> <span id="infoMembership">-</span></p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px;">
+                <a href="{% url 'reception_dashboard' %}" class="btn btn-primary" style="text-align: center; text-decoration: none; padding: 12px 20px;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check-circle"></i> Create Visit & Send to Doctor
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    function updatePatientInfo() {
+        const select = document.getElementById('patientSelect');
+        const option = select.options[select.selectedIndex];
+        
+        if (option.value) {
+            document.getElementById('patientInfo').style.display = 'block';
+            document.getElementById('infoName').textContent = option.dataset.name;
+            document.getElementById('infoAge').textContent = option.dataset.age || 'N/A';
+            document.getElementById('infoPhone').textContent = option.dataset.phone || 'N/A';
+            document.getElementById('infoInsurance').textContent = option.dataset.insured === 'True' ? 'Yes' : 'No';
+            document.getElementById('infoInsurer').textContent = option.dataset.insurer || 'N/A';
+            document.getElementById('infoMembership').textContent = option.dataset.membership || 'N/A';
+        } else {
+            document.getElementById('patientInfo').style.display = 'none';
+        }
+    }
+
+    function updateDoctors() {
+        const departmentId = document.getElementById('departmentSelect').value;
+        const doctorSelect = document.getElementById('doctorSelect');
+        
+        if (!departmentId) {
+            doctorSelect.innerHTML = '<option value="">-- Select Department First --</option>';
+            return;
+        }
+        
+        // AJAX call to get doctors for department
+        fetch(`/dashboard/doctors-by-department/?department_id=${departmentId}`)
+            .then(response => response.json())
+            .then(data => {
+                let options = '<option value="">-- Choose Doctor --</option>';
+                data.doctors.forEach(doctor => {
+                    options += `<option value="${doctor.id}">${doctor.name}</option>`;
+                });
+                doctorSelect.innerHTML = options;
+            })
+            .catch(error => console.error('Error fetching doctors:', error));
+    }
+    </script>
+{% endblock %}

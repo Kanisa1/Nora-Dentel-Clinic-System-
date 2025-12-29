@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reception Dashboard - Nora Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-phone-alt"></i>
+        Reception Dashboard
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Clinical Dashboard Card -->
+    <div class="bg-gradient-to-br from-clinic-purple to-indigo-600 rounded-2xl shadow-lg p-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="bg-white/20 rounded-2xl p-6 shadow-lg">
+                    <i class="fas fa-user-md text-white text-4xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Clinical Dashboard</h2>
+                    <p class="text-3xl font-bold text-white mb-1">{{ user.clinicuser.user.first_name|default:user.username }}</p>
+                    <p class="text-white/80 flex items-center gap-2">
+                        <i class="fas fa-hospital"></i>
+                        {% if user.clinicuser.department %}
+                            {{ user.clinicuser.department.name }}
+                        {% else %}
+                            GENERAL DENTISTRY
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="bg-white/20 rounded-2xl p-6 text-center min-w-[180px] text-white">
+                <p class="text-sm font-semibold uppercase mb-1" id="current-day"></p>
+                <p class="text-3xl font-bold" id="current-date"></p>
+                <p class="text-sm mt-2 flex items-center justify-center gap-1 opacity-90">
+                    <i class="far fa-clock"></i>
+                    <span id="current-time"></span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update current time, day, and date
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Update day
+            const dayString = now.toLocaleDateString('en-US', { weekday: 'long' });
+            document.getElementById('current-day').textContent = dayString.toUpperCase();
+            
+            // Update date
+            const dateString = now.toLocaleDateString('en-US', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+            document.getElementById('current-date').textContent = dateString;
+            
+            // Update time
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true 
+            });
+            document.getElementById('current-time').textContent = timeString;
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+    </script>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-clinic-purple hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Today's Patients</p>
+                    <p class="text-3xl font-bold text-clinic-purple mt-2">{{ patients_today|default:0 }}</p>
+                </div>
+                <i class="fas fa-users text-4xl text-clinic-light"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Appointments</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2">{{ scheduled_appointments|default:0 }}</p>
+                </div>
+                <i class="fas fa-calendar-check text-4xl text-green-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Registered Patients</p>
+                    <p class="text-3xl font-bold text-blue-600 mt-2">{{ total_registered_patients|default:0 }}</p>
+                </div>
+                <i class="fas fa-user-check text-4xl text-blue-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Checked In</p>
+                    <p class="text-3xl font-bold text-orange-600 mt-2">{{ checked_in_today|default:0 }}</p>
+                </div>
+                <i class="fas fa-user-tie text-4xl text-orange-100"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <a href="{% url 'reception_register_patient' %}" class="bg-gradient-to-br from-clinic-purple to-clinic-dark hover:shadow-lg transition rounded-lg p-6 text-white text-center group">
+            <i class="fas fa-user-plus text-3xl mb-3 group-hover:scale-110 transition transform"></i>
+            <p class="font-semibold">Register Patient</p>
+        </a>
+        <a href="{% url 'reception_create_visit' %}" class="bg-gradient-to-br from-green-600 to-green-700 hover:shadow-lg transition rounded-lg p-6 text-white text-center group">
+            <i class="fas fa-file-medical text-3xl mb-3 group-hover:scale-110 transition transform"></i>
+            <p class="font-semibold">Create Visit</p>
+        </a>
+        <a href="{% url 'reception_schedule_appointment_form' %}" class="bg-gradient-to-br from-blue-600 to-blue-700 hover:shadow-lg transition rounded-lg p-6 text-white text-center group">
+            <i class="fas fa-calendar-plus text-3xl mb-3 group-hover:scale-110 transition transform"></i>
+            <p class="font-semibold">Schedule Appt</p>
+        </a>
+        <a href="{% url 'reception_patients' %}" class="bg-gradient-to-br from-indigo-600 to-indigo-700 hover:shadow-lg transition rounded-lg p-6 text-white text-center group">
+            <i class="fas fa-list text-3xl mb-3 group-hover:scale-110 transition transform"></i>
+            <p class="font-semibold">Patient List</p>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Today's Waiting Queue -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-clinic-dark flex items-center gap-2">
+                    <i class="fas fa-chair text-clinic-purple"></i>
+                    Today's Queue
+                </h3>
+                <button onclick="window.print()" class="text-clinic-purple hover:bg-clinic-light px-3 py-2 rounded transition">
+                    <i class="fas fa-print"></i>
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">#</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Doctor</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Check-in</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        {% for queue in today_queue|default:"" %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-2 font-bold text-clinic-purple text-lg">#{{ queue.position }}</td>
+                                <td class="px-4 py-2 font-semibold">
+                                    {{ queue.visit.patient.first_name }} {{ queue.visit.patient.last_name }}
+                                    <span class="text-xs text-gray-500">{{ queue.visit.patient.phone }}</span>
+                                </td>
+                                <td class="px-4 py-2">
+                                    {% if queue.visit.doctor %}
+                                        Dr. {{ queue.visit.doctor.user.get_full_name|default:queue.visit.doctor.user.username }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if queue.status == 'waiting' %}
+                                            bg-yellow-100 text-yellow-800
+                                        {% elif queue.status == 'in_consultation' %}
+                                            bg-blue-100 text-blue-800
+                                        {% else %}
+                                            bg-green-100 text-green-800
+                                        {% endif %}
+                                    ">
+                                        {{ queue.get_status_display|default:"Waiting" }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-gray-600">{{ queue.checked_in_at|time:"H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="px-4 py-6 text-center text-gray-500">
+                                    <i class="fas fa-inbox text-2xl mb-2"></i>
+                                    <p class="mt-2">No patients in queue today</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Stats & Actions -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-lightning-bolt text-clinic-purple"></i>
+                Quick Actions
+            </h3>
+            <div class="space-y-3">
+                <button onclick="printAppointments()" class="w-full bg-clinic-purple hover:bg-clinic-dark text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-print"></i> Print Appointment
+                </button>
+                <a href="{% url 'reception_create_visit' %}" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-file-medical"></i> Medical Cert
+                </a>
+                <button onclick="exportData()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <a href="{% url 'reception_patient_list' %}" class="w-full border-2 border-clinic-purple text-clinic-purple hover:bg-clinic-light py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-search"></i> Search
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments Schedule -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-calendar-alt text-clinic-purple"></i>
+            Scheduled Appointments
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Date/Time</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Age</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Doctor</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-700">Phone</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for appointment in appointments %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 font-semibold">{{ appointment.scheduled_at|date:"M d, Y H:i" }}</td>
+                            <td class="px-4 py-2">{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</td>
+                            <td class="px-4 py-2">{{ appointment.patient.age|default:"—" }}</td>
+                            <td class="px-4 py-2">
+                                {% if appointment.doctor %}
+                                    Dr. {{ appointment.doctor.user.get_full_name|default:appointment.doctor.user.username }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                    {% if appointment.status == 'scheduled' %}
+                                        bg-blue-100 text-blue-800
+                                    {% elif appointment.status == 'checked_in' %}
+                                        bg-yellow-100 text-yellow-800
+                                    {% elif appointment.status == 'completed' %}
+                                        bg-green-100 text-green-800
+                                    {% else %}
+                                        bg-red-100 text-red-800
+                                    {% endif %}
+                                ">
+                                    {{ appointment.get_status_display|title }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2">{{ appointment.patient.phone|default:"—" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-6 text-center text-gray-500">
+                                <i class="fas fa-calendar-times text-3xl mb-2"></i>
+                                <p>No appointments scheduled</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function printAppointments() {
+    // Create a print-friendly version of the appointments
+    const printWindow = window.open('', '_blank');
+    const today = new Date().toLocaleDateString();
+    
+    let content = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Appointments - Nora Clinic</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                h1 { color: #7A2FA6; text-align: center; }
+                h2 { color: #333; margin-top: 30px; border-bottom: 2px solid #7A2FA6; padding-bottom: 5px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                th { background: #7A2FA6; color: white; padding: 10px; text-align: left; }
+                td { padding: 8px; border-bottom: 1px solid #ddd; }
+                tr:hover { background: #f5f5f5; }
+                .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                @media print {
+                    button { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div>
+                    <h1>Nora Dental Clinic</h1>
+                    <p style="text-align: center; color: #666;">Appointments Report</p>
+                </div>
+                <div style="text-align: right;">
+                    <p><strong>Date:</strong> ${today}</p>
+                    <button onclick="window.print()" style="background: #7A2FA6; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">Print</button>
+                </div>
+            </div>
+            
+            <h2>Today's Queue</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                        <th>Check-in</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    // Add queue data
+    const queueTable = document.querySelector('.overflow-x-auto table');
+    if (queueTable) {
+        const rows = queueTable.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 1) {
+                content += '<tr>';
+                cells.forEach(cell => {
+                    content += `<td>${cell.textContent.trim()}</td>`;
+                });
+                content += '</tr>';
+            }
+        });
+    }
+    
+    content += `
+                </tbody>
+            </table>
+            
+            <h2>Scheduled Appointments</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Patient</th>
+                        <th>Age</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                        <th>Phone</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    // Add appointments data
+    const appointmentsTable = document.querySelectorAll('.overflow-x-auto table')[1];
+    if (appointmentsTable) {
+        const rows = appointmentsTable.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 1) {
+                content += '<tr>';
+                cells.forEach(cell => {
+                    content += `<td>${cell.textContent.trim()}</td>`;
+                });
+                content += '</tr>';
+            }
+        });
+    }
+    
+    content += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(content);
+    printWindow.document.close();
+}
+
+function exportData() {
+    // Export appointments and queue data to CSV
+    const today = new Date().toLocaleDateString();
+    let csv = 'Reception Dashboard Export - ' + today + '\n\n';
+    
+    // Export Queue Data
+    csv += 'TODAY\'S QUEUE\n';
+    csv += 'Position,Patient,Doctor,Status,Check-in Time\n';
+    
+    const queueTable = document.querySelector('.overflow-x-auto table');
+    if (queueTable) {
+        const queueRows = queueTable.querySelectorAll('tbody tr');
+        queueRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 1) {
+                const data = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, ';').replace(/\n/g, ' '));
+                csv += data.join(',') + '\n';
+            }
+        });
+    }
+    
+    // Export Appointments Data
+    csv += '\n\nSCHEDULED APPOINTMENTS\n';
+    csv += 'Date/Time,Patient,Age,Doctor,Status,Phone\n';
+    
+    const appointmentsTable = document.querySelectorAll('.overflow-x-auto table')[1];
+    if (appointmentsTable) {
+        const appointmentRows = appointmentsTable.querySelectorAll('tbody tr');
+        appointmentRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 1) {
+                const data = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, ';').replace(/\n/g, ' '));
+                csv += data.join(',') + '\n';
+            }
+        });
+    }
+    
+    // Create download
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'reception_dashboard_' + today.replace(/\//g, '-') + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

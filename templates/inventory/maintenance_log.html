@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Maintenance Log - Nora Dental Clinic{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white mb-1">Equipment Maintenance Log</h2>
+            <p class="text-muted mb-0">Record and track equipment maintenance activities</p>
+        </div>
+        <a href="{% url 'inventory_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Add Maintenance Form -->
+        <div class="col-lg-5">
+            <div class="form-container mb-4">
+                <h5 class="form-title">
+                    <i class="fas fa-plus me-2"></i>Add Maintenance Record
+                </h5>
+                <form method="POST" id="maintenanceForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Equipment <span class="required">*</span></label>
+                        <select name="equipment_id" class="form-select" required>
+                            <option value="">-- Select Equipment --</option>
+                            {% for equipment in all_equipment %}
+                            <option value="{{ equipment.id }}">{{ equipment.asset_code }} - {{ equipment.asset_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Maintenance Date <span class="required">*</span></label>
+                            <input type="date" name="maintenance_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Maintenance Type</label>
+                            <select name="maintenance_type" class="form-select">
+                                <option value="routine">Routine</option>
+                                <option value="repair">Repair</option>
+                                <option value="inspection">Inspection</option>
+                                <option value="calibration">Calibration</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description <span class="required">*</span></label>
+                        <textarea name="description" class="form-control" rows="3" required placeholder="Describe the maintenance work performed"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Performed By</label>
+                            <input type="text" name="performed_by" class="form-control" placeholder="Technician name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cost (RWF)</label>
+                            <input type="number" name="cost" class="form-control" placeholder="0.00" min="0" step="0.01">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>Save Maintenance Record
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Maintenance History -->
+        <div class="col-lg-7">
+            <div class="form-container">
+                <h5 class="form-title">
+                    <i class="fas fa-history me-2"></i>Maintenance History
+                </h5>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Equipment</th>
+                                <th>Asset Code</th>
+                                <th>Last Maintenance</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for equipment in all_equipment %}
+                            <tr>
+                                <td><strong>{{ equipment.asset_name }}</strong></td>
+                                <td><span class="badge bg-secondary">{{ equipment.asset_code }}</span></td>
+                                <td>
+                                    {% if equipment.last_maintenance_date %}
+                                        {{ equipment.last_maintenance_date|date:"Y-m-d" }}
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if equipment.status == 'active' %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% elif equipment.status == 'maintenance' %}
+                                        <span class="badge bg-warning">In Maintenance</span>
+                                    {% elif equipment.status == 'damaged' %}
+                                        <span class="badge bg-danger">Damaged</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ equipment.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ equipment.location|default:"Not specified" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if not all_equipment %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No equipment found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-container {
+        background: #ffffff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-title {
+        color: #1f2937;
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #3b82f6;
+    }
+
+    .form-label {
+        color: #374151;
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        color: #1f2937;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.95rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+    .required {
+        color: #dc2626;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background-color: #f9fafb;
+        color: #374151;
+        font-weight: 600;
+        border-bottom: 2px solid #e5e7eb;
+        padding: 0.875rem;
+        font-size: 0.875rem;
+    }
+
+    .table tbody td {
+        color: #1f2937;
+        padding: 0.875rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 0.875rem;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .badge {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+    }
+
+    .bg-success {
+        background-color: #10b981 !important;
+    }
+
+    .bg-warning {
+        background-color: #f59e0b !important;
+        color: #000 !important;
+    }
+
+    .bg-danger {
+        background-color: #ef4444 !important;
+    }
+
+    .bg-secondary {
+        background-color: #6b7280 !important;
+    }
+
+    .btn-primary {
+        background-color: #3b82f6;
+        border: none;
+        color: #ffffff;
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+        background-color: #2563eb;
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+        border: none;
+        color: #ffffff;
+        padding: 0.5rem 1rem;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    h2 {
+        font-weight: 600;
+    }
+
+    .text-muted {
+        color: #6b7280 !important;
+    }
+
+    @media (max-width: 991px) {
+        .form-container {
+            padding: 1.25rem;
+        }
+        .col-lg-5, .col-lg-7 {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('maintenanceForm');
+        
+        form.addEventListener('submit', function(e) {
+            const equipmentId = form.querySelector('[name="equipment_id"]').value;
+            const maintenanceDate = form.querySelector('[name="maintenance_date"]').value;
+            const description = form.querySelector('[name="description"]').value;
+            
+            if (!equipmentId || !maintenanceDate || !description) {
+                e.preventDefault();
+                alert('Please fill in all required fields');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

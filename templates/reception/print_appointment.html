@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Slip - {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            background: white;
+        }
+        
+        .print-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border: 2px solid #8B3A8B;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #8B3A8B;
+        }
+        
+        .clinic-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: #8B3A8B;
+            margin-bottom: 5px;
+        }
+        
+        .clinic-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .document-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .appointment-id {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8B3A8B;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #8B3A8B;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        
+        .highlight-date {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .highlight-time {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .notes-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .notes-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+        
+        .notes-content {
+            color: #856404;
+            line-height: 1.6;
+        }
+        
+        .instructions {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 25px 0;
+        }
+        
+        .instructions-title {
+            font-weight: bold;
+            color: #0d47a1;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .instructions ul {
+            margin-left: 20px;
+            color: #0d47a1;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .footer-info {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .print-date {
+            font-size: 11px;
+            color: #999;
+            margin-top: 15px;
+        }
+        
+        .barcode-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .barcode-placeholder {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 3px;
+            margin: 10px 0;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .print-container {
+                border: none;
+                padding: 20px;
+            }
+            
+            @page {
+                margin: 1cm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="clinic-name">NORA DENTAL CLINIC</div>
+            <div class="clinic-subtitle">Excellence in Dental Care</div>
+            <div class="clinic-subtitle">📞 +250 798 287 919 | 📧 norhadentalclinic@gmail.com</div>
+            <div class="document-title">Appointment Confirmation</div>
+            <div class="appointment-id">Appointment ID: #{{ appointment.id }}</div>
+        </div>
+        
+        <!-- Patient Information -->
+        <div class="section">
+            <div class="section-title">Patient Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Patient Name</div>
+                    <div class="info-value">{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Patient ID</div>
+                    <div class="info-value">#{{ appointment.patient.id }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phone Number</div>
+                    <div class="info-value">{{ appointment.patient.phone|default:"N/A" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Insurance Status</div>
+                    <div class="info-value">
+                        {% if appointment.patient.is_insured %}
+                            Insured - {{ appointment.patient.insurer }}
+                        {% else %}
+                            Private / No Insurance
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Appointment Details -->
+        <div class="highlight-box">
+            <div style="font-size: 16px; margin-bottom: 10px; opacity: 0.9;">Your Appointment</div>
+            <div class="highlight-date">{{ appointment.scheduled_at|date:"l, F j, Y" }}</div>
+            <div class="highlight-time">{{ appointment.scheduled_at|date:"g:i A" }}</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Medical Team</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Doctor</div>
+                    <div class="info-value">Dr. {{ appointment.doctor.user.get_full_name|default:appointment.doctor.user.username }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">{{ appointment.department.name|default:"General" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notes -->
+        {% if appointment.notes %}
+        <div class="notes-box">
+            <div class="notes-title">📝 Appointment Notes / Reason for Visit:</div>
+            <div class="notes-content">{{ appointment.notes }}</div>
+        </div>
+        {% endif %}
+        
+        <!-- Barcode/Reference Section -->
+        <div class="barcode-section">
+            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Reference Code</div>
+            <div class="barcode-placeholder">APT-{{ appointment.id|stringformat:"05d" }}</div>
+            <div style="font-size: 11px; color: #999; margin-top: 5px;">Please bring this slip on your appointment day</div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="instructions">
+            <div class="instructions-title">📋 Important Instructions:</div>
+            <ul>
+                <li>Please arrive <strong>15 minutes before</strong> your scheduled appointment time</li>
+                <li>Bring this appointment slip and your identification</li>
+                <li>If you have insurance, please bring your insurance card</li>
+                <li>If you need to cancel or reschedule, please contact us at least 24 hours in advance</li>
+                <li>For emergencies, please call our emergency line</li>
+            </ul>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-info">
+                <strong>Nora Dental Clinic</strong><br>
+                Gasabo, Kigali, Rwanda<br>
+                Phone: +250 798 287 919 | Email: norhadentalclinic@gmail.com<br>
+                Operating Hours: Monday - Friday, 8:00 AM - 6:00 PM
+            </div>
+            <div class="print-date">
+                Printed on: {{ print_date|date:"F j, Y g:i A" }}
+                {% if appointment.scheduled_by %}
+                | Scheduled by: {{ appointment.scheduled_by.user.get_full_name|default:appointment.scheduled_by.user.username }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-print when page loads
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>

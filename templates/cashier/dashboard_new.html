@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cashier Dashboard - Nora Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-money-bill-wave"></i>
+        Cashier Dashboard
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Financial Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-clinic-purple hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Unpaid Invoices</p>
+                    <p class="text-3xl font-bold text-clinic-purple mt-2">{{ unpaid_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-file-invoice text-4xl text-clinic-light"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Amount Pending</p>
+                    <p class="text-3xl font-bold text-red-600 mt-2">RWF {{ total_pending|default:"0"|floatformat:0 }}</p>
+                </div>
+                <i class="fas fa-exclamation-circle text-4xl text-red-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Today's Collection</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2">RWF {{ daily_collection|default:"0"|floatformat:0 }}</p>
+                </div>
+                <i class="fas fa-coins text-4xl text-green-100"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Total Payments</p>
+                    <p class="text-3xl font-bold text-blue-600 mt-2">{{ payment_count|default:0 }}</p>
+                </div>
+                <i class="fas fa-cash-register text-4xl text-blue-100"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Unpaid Invoices Table -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-file-invoice-dollar text-clinic-purple"></i>
+                Unpaid Invoices
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Invoice #</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Patient</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Date</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Total</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Type</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        {% for invoice in unpaid_invoices|default:"" %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-2 font-bold text-clinic-purple">#{{ invoice.id }}</td>
+                                <td class="px-4 py-2">{{ invoice.visit.patient.first_name }} {{ invoice.visit.patient.last_name }}</td>
+                                <td class="px-4 py-2">{{ invoice.created_at|date:"d/m/y" }}</td>
+                                <td class="px-4 py-2 font-semibold">RWF {{ invoice.total_private|floatformat:0 }}</td>
+                                <td class="px-4 py-2">
+                                    {% if invoice.visit.patient.is_insured %}
+                                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Insurance</span>
+                                    {% else %}
+                                        <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded text-xs font-semibold">Private</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-2">
+                                    <a href="#" class="bg-clinic-purple text-white px-3 py-1 rounded text-xs font-semibold hover:bg-clinic-dark transition">
+                                        Collect
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="px-4 py-6 text-center text-gray-500">No unpaid invoices</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-lightning-bolt text-clinic-purple"></i>
+                Quick Actions
+            </h3>
+            <div class="space-y-3">
+                <button class="w-full bg-clinic-purple hover:bg-clinic-dark text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-print"></i> Print Invoice
+                </button>
+                <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-receipt"></i> Record Payment
+                </button>
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-chart-bar"></i> Daily Report
+                </button>
+                <button class="w-full border-2 border-clinic-purple text-clinic-purple hover:bg-clinic-light py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-search"></i> Search Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods Distribution -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-credit-card text-clinic-purple"></i>
+                Payment Methods Today
+            </h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-money-bill text-green-600"></i>
+                        <span>Cash</span>
+                    </div>
+                    <span class="font-bold text-lg">RWF {{ cash_total|default:"0"|floatformat:0 }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-credit-card text-blue-600"></i>
+                        <span>Card</span>
+                    </div>
+                    <span class="font-bold text-lg">RWF {{ card_total|default:"0"|floatformat:0 }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-hospital text-purple-600"></i>
+                        <span>Insurance</span>
+                    </div>
+                    <span class="font-bold text-lg">RWF {{ insurance_total|default:"0"|floatformat:0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+                <i class="fas fa-history text-clinic-purple"></i>
+                Recent Transactions
+            </h3>
+            <div class="space-y-2 max-h-64 overflow-y-auto">
+                {% for payment in recent_payments|default:"" %}
+                    <div class="flex items-center justify-between p-2 border-b">
+                        <div>
+                            <p class="font-semibold text-sm">{{ payment.invoice.visit.patient.first_name }}</p>
+                            <p class="text-xs text-gray-500">{{ payment.paid_at|time:"H:i" }}</p>
+                        </div>
+                        <span class="font-bold text-green-600">+RWF {{ payment.amount|floatformat:0 }}</span>
+                    </div>
+                {% empty %}
+                    <p class="text-center text-gray-500 py-4">No transactions yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Summary Table -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-clinic-dark mb-4 flex items-center gap-2">
+            <i class="fas fa-chart-line text-clinic-purple"></i>
+            Daily Summary
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-clinic-purple to-clinic-dark text-white rounded-lg p-4">
+                <p class="text-sm opacity-80">Today's Total Revenue</p>
+                <p class="text-3xl font-bold mt-2">RWF {{ daily_revenue|default:"0"|floatformat:0 }}</p>
+            </div>
+            <div class="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-lg p-4">
+                <p class="text-sm opacity-80">Private Payments</p>
+                <p class="text-3xl font-bold mt-2">RWF {{ private_total|default:"0"|floatformat:0 }}</p>
+            </div>
+            <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-lg p-4">
+                <p class="text-sm opacity-80">Insurance Payments</p>
+                <p class="text-3xl font-bold mt-2">RWF {{ insurance_revenue|default:"0"|floatformat:0 }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

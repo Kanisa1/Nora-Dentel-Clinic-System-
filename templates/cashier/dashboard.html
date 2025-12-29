@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Cashier Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cashier-shell { background: #f4f6fb; min-height: 100vh; }
+    .cashier-hero-card { position: relative; border-radius: 32px; padding: 2.75rem; color: #fff; background: linear-gradient(135deg, #0ea5e9, #2563eb, #7c3aed); box-shadow: 0 30px 80px rgba(14, 165, 233, 0.35); overflow: hidden; margin-top: -1rem; }
+    .cashier-hero-card::after { content: ""; position: absolute; inset: 1.5rem; border-radius: 28px; border: 1px solid rgba(255,255,255,0.15); pointer-events: none; }
+    .cashier-hero-content { position: relative; display: flex; flex-direction: column; gap: 2rem; }
+    .cashier-hero-header { display: flex; flex-direction: column; gap: 1.25rem; }
+    @media (min-width: 1024px) { .cashier-hero-header { flex-direction: row; justify-content: space-between; align-items: center; } }
+    .hero-kicker { text-transform: uppercase; letter-spacing: 0.3em; font-size: 0.8rem; color: rgba(255,255,255,0.75); }
+    .hero-title { font-size: 2.6rem; font-weight: 700; margin: 0; }
+    .hero-subtitle { font-size: 1rem; color: rgba(255,255,255,0.9); max-width: 32rem; }
+    .hero-chips { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .hero-pill { border-radius: 999px; border: 1px solid rgba(255,255,255,0.35); padding: 0.45rem 1rem; font-size: 0.85rem; backdrop-filter: blur(6px); background: rgba(255,255,255,0.12); }
+    .hero-date { text-align: right; }
+    .hero-day { text-transform: uppercase; letter-spacing: 0.25em; font-size: 0.75rem; color: rgba(255,255,255,0.7); }
+    .hero-main-date { font-size: 1.4rem; font-weight: 600; }
+    .hero-time { font-size: 1rem; display: inline-flex; align-items: center; gap: 0.4rem; color: rgba(255,255,255,0.9); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cashier-shell px-4 py-6">
+    <section class="cashier-hero-card mb-8">
+        <div class="cashier-hero-content">
+            <div class="cashier-hero-header">
+                <div>
+                    <p class="hero-kicker">Cashier portal</p>
+                    <h1 class="hero-title">Welcome back, {{ cashier_name }}</h1>
+                    <p class="hero-subtitle">Track invoices, reconcile payments, and keep the clinic cash-positive in real time.</p>
+                </div>
+                <div class="hero-date">
+                    <p class="hero-day">{% now "l" %}</p>
+                    <p class="hero-main-date">{% now "M d, Y" %}</p>
+                    <p class="hero-time"><i class="far fa-clock"></i>{% now "h:i A" %}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">
+                <i class="fas fa-bolt mr-2"></i> Quick Actions
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg transition-colors" onclick="viewPayments()">
+                    <i class="fas fa-credit-card mr-2"></i> View Payments
+                </button>
+                <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-4 rounded-lg transition-colors" onclick="refund()">
+                    <i class="fas fa-undo mr-2"></i> Issue Refund
+                </button>
+                <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-lg transition-colors" onclick="dailyReport()">
+                    <i class="fas fa-file-alt mr-2"></i> Daily Report
+                </button>
+                <button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-lg transition-colors" onclick="receipts()">
+                    <i class="fas fa-receipt mr-2"></i> View Receipts
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patients Awaiting Payment -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white">
+                <i class="fas fa-users mr-2"></i>Patients Awaiting Payment ({{ awaiting_payment.count }})
+            </h2>
+        </div>
+
+        {% if awaiting_payment %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visit Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for visit in awaiting_payment %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-green-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ visit.patient.first_name }} {{ visit.patient.last_name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ visit.patient.phone }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">Dr. {{ visit.doctor.user.first_name }} {{ visit.doctor.user.last_name }}</div>
+                            <div class="text-sm text-gray-500">{{ visit.department.name|default:"N/A" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ visit.created_at|date:"M d, Y" }}</div>
+                            <div class="text-sm text-gray-500">{{ visit.created_at|time:"H:i" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ visit.billing_items.count }} items
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="space-y-3">
+                                <div class="flex flex-wrap gap-2">
+                                    <a href="{% url 'view_invoice' visit.id %}"
+                                       class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                        <i class="fas fa-file-invoice mr-1"></i> View Invoice
+                                    </a>
+                                    <a href="{% url 'print_invoice' visit.id %}"
+                                       target="_blank"
+                                       class="inline-flex items-center px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                        <i class="fas fa-print mr-1"></i> Print
+                                    </a>
+                                </div>
+                                <form method="post" action="{% url 'mark_paid' visit.id %}" class="flex flex-col gap-2 lg:flex-row lg:items-center" onsubmit="return confirm('Record this payment?');">
+                                    {% csrf_token %}
+                                    <select name="method" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        {% for value,label in payment_method_choices %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="text" name="reference" placeholder="Reference / MoMo code (optional)" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full lg:w-60">
+                                    <button type="submit" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                        <i class="fas fa-check mr-1"></i>Record Payment
+                                    </button>
+                                </form>
+                                <p class="text-xs text-gray-500">Insurance entries remain pending until the insurer confirms payment.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-12 text-center">
+            <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+            <p class="text-gray-500 text-lg">No patients awaiting payment</p>
+            <p class="text-gray-400 text-sm mt-2">Patients sent from doctors will appear here</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-100 rounded-lg p-3">
+                    <i class="fas fa-money-bill-wave text-blue-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Today's Revenue</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ today_revenue|floatformat:0 }} RWF</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-100 rounded-lg p-3">
+                    <i class="fas fa-receipt text-green-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Today's Invoices</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ today_count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-yellow-100 rounded-lg p-3">
+                    <i class="fas fa-hourglass-half text-yellow-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Pending</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ pending_count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-purple-100 rounded-lg p-3">
+                    <i class="fas fa-calendar-week text-purple-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Week Revenue</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ week_revenue|floatformat:0 }} RWF</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Transactions -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mt-6">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">
+                <i class="fas fa-exchange-alt mr-2"></i> Today's Transactions
+            </h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for transaction in today_transactions %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transaction.paid_at|time:"H:i" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transaction.invoice.visit.patient.first_name }} {{ transaction.invoice.visit.patient.last_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ transaction.amount }} RWF</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="flex flex-col gap-1">
+                                    {% if transaction.method == 'cash' %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ transaction.get_method_display }}</span>
+                                    {% elif transaction.method == 'momo' %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-cyan-100 text-cyan-800">{{ transaction.get_method_display }}</span>
+                                    {% elif transaction.method == 'card' %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">{{ transaction.get_method_display }}</span>
+                                    {% else %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">{{ transaction.get_method_display }}</span>
+                                    {% endif %}
+                                    {% if transaction.reference %}
+                                        <span class="text-xs text-gray-500">Ref: {{ transaction.reference }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if transaction.invoice and transaction.invoice.paid %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
+                                {% else %}
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">No transactions today</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewPayments() {
+    window.location.href = "{% url 'cashier_payments' %}";
+}
+
+function refund() {
+    window.location.href = "{% url 'request_refund' %}";
+}
+
+function dailyReport() {
+    window.location.href = "{% url 'cashier_reconciliation' %}";
+}
+
+function receipts() {
+    window.location.href = "{% url 'view_receipts' %}";
+}
+</script>
+{% endblock %}

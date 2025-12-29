@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Doctor Dashboard - Nora Dental Clinic{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'clinic-purple': '#7A2FA6',
+                        'clinic-dark': '#3A0F45',
+                        'clinic-light': '#f0e7f5',
+                    }
+                }
+            }
+        }
+    </script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Doctor Sidebar -->
+        <aside id="sidebar" class="sidebar-panel flex flex-col transition-transform duration-300 fixed md:static z-40" style="background: #0b1120; color: #e2e8f0; top: 0; left: 0; height: 100vh; min-height: 100vh; width: 17rem;">
+            <!-- Logo -->
+            <div class="p-6 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
+                        <i class="fas fa-user-md text-clinic-purple text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-semibold text-base">Nora Clinic</h1>
+                        <p class="text-xs text-slate-400">Doctor Portal</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="flex-1 overflow-y-auto p-4">
+                <div class="space-y-1">
+                    <!-- Main Dashboard -->
+                    <a href="{% url 'doctor_dashboard_enhanced' %}" class="nav-link group flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-white/10 transition-all duration-200 {% if request.resolver_match.url_name == 'doctor_dashboard_enhanced' %}bg-white/20 shadow-lg ring-2 ring-white/30{% endif %}">
+                        <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                            <i class="fas fa-th-large text-lg text-white"></i>
+                        </div>
+                        <span class="font-semibold text-base">Overview</span>
+                    </a>
+
+                    <!-- Divider -->
+                    <div class="h-px bg-purple-700/50 my-4"></div>
+
+                    <!-- Patient Care Section -->
+                    <div class="px-2 py-2 text-xs font-bold text-purple-200 uppercase tracking-wider">
+                        Patient Management
+                    </div>
+                    
+                    <a href="{% url 'my_patients_today' %}" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-all duration-200">
+                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                            <i class="fas fa-calendar-day text-white"></i>
+                        </div>
+                        <span class="font-medium">Today's Patients</span>
+                    </a>
+
+                    <a href="{% url 'waiting_queue' %}" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-all duration-200 relative">
+                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                            <i class="fas fa-clock text-white"></i>
+                        </div>
+                        <span class="font-medium">Waiting Queue</span>
+                        {% if waiting_count %}
+                        <span class="ml-auto bg-yellow-400 text-yellow-900 text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">{{ waiting_count }}</span>
+                        {% endif %}
+                    </a>
+
+                    <!-- Divider -->
+                    <div class="h-px bg-purple-700/50 my-4"></div>
+
+                    <!-- Clinical Work Section -->
+                    <div class="px-2 py-2 text-xs font-bold text-purple-200 uppercase tracking-wider">
+                        Clinical Work
+                    </div>
+
+                    <a href="{% url 'medical_records_list' %}" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-all duration-200">
+                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                            <i class="fas fa-file-medical text-white"></i>
+                        </div>
+                        <span class="font-medium">Medical Records</span>
+                    </a>
+
+                    <a href="{% url 'prescriptions_list' %}" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-all duration-200">
+                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                            <i class="fas fa-prescription text-white"></i>
+                        </div>
+                        <span class="font-medium">Prescriptions</span>
+                    </a>
+
+                    <a href="{% url 'medical_certificates_list' %}" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-all duration-200">
+                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                            <i class="fas fa-certificate text-white"></i>
+                        </div>
+                        <span class="font-medium">Certificates</span>
+                    </a>
+
+                    <!-- Divider -->
+                    <div class="h-px bg-purple-700/50 my-4"></div>
+
+                    <!-- Analytics Section -->
+                    <div class="px-2 py-2 text-xs font-bold text-purple-200 uppercase tracking-wider">
+                        Analytics
+                    </div>
+
+                    <a href="{% url 'my_statistics' %}" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-all duration-200">
+                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                            <i class="fas fa-chart-line text-white"></i>
+                        </div>
+                        <span class="font-medium">My Statistics</span>
+                    </a>
+                </div>
+            </nav>
+
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Navigation Bar -->
+            <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm">
+                <!-- Mobile Menu Toggle -->
+                <button id="menu-toggle" class="md:hidden text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition-colors">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+
+                <!-- Page Title -->
+                <h2 class="text-2xl font-bold text-gray-800">{% block page_title %}Doctor Dashboard{% endblock %}</h2>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-4">
+                    <!-- Quick Stats -->
+                    <div class="hidden lg:flex items-center gap-4 mr-4">
+                        <div class="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 rounded-lg">
+                            <i class="fas fa-clock text-yellow-600"></i>
+                            <span class="text-sm font-medium text-yellow-900">{{ waiting_count|default:0 }} Waiting</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-1.5 bg-purple-50 rounded-lg">
+                            <i class="fas fa-stethoscope text-purple-600"></i>
+                            <span class="text-sm font-medium text-purple-900">{{ in_consultation_count|default:0 }} Active</span>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative text-gray-600 hover:text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white"></span>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
+                            {% if clinic_user.profile_picture %}
+                            <img src="{{ clinic_user.profile_picture.url }}" alt="{{ doctor_name }}" class="w-9 h-9 rounded-full object-cover shadow-md border-2 border-purple-500">
+                            {% else %}
+                            <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                                {{ doctor_username.0|upper }}
+                            </div>
+                            {% endif %}
+                            <span class="hidden sm:inline text-sm font-medium text-gray-700">{{ doctor_name }}</span>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                        </button>
+                        <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50 py-2">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="text-sm font-semibold text-gray-900">{{ doctor_name }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ doctor_email|default:"No email" }}</p>
+                                <p class="text-xs text-purple-600 font-medium mt-1"><i class="fas fa-hospital"></i> {{ doctor_department.name|default:"General Dentistry" }}</p>
+                            </div>
+                            <a href="{% url 'doctor_profile' %}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50 transition-colors text-sm text-gray-700">
+                                <i class="fas fa-user-circle w-4"></i> My Profile
+                            </a>
+                            <a href="{% url 'doctor_profile' %}#preferences" class="flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50 transition-colors text-sm text-gray-700">
+                                <i class="fas fa-cog w-4"></i> Settings
+                            </a>
+                            <a href="#" class="flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50 transition-colors text-sm text-gray-700">
+                                <i class="fas fa-question-circle w-4"></i> Help & Support
+                            </a>
+                            <hr class="my-2">
+                            <a href="{% url 'home' %}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors text-sm font-medium">
+                                <i class="fas fa-sign-out-alt w-4"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"></div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        menuToggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            sidebarOverlay.classList.toggle('hidden');
+        });
+
+        sidebarOverlay?.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        });
+
+        // User menu toggle
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenu = document.getElementById('user-menu');
+
+        userMenuBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn?.contains(e.target) && !userMenu?.contains(e.target)) {
+                userMenu?.classList.add('hidden');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

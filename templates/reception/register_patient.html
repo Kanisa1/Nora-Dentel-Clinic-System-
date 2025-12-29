@@ -1,0 +1,196 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Register Patient - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-user-plus"></i> Register New Patient
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'reception_dashboard' %}" class="nav-link">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_register_patient' %}" class="nav-link active">
+            <i class="fas fa-user-plus"></i> Register Patient
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_patients' %}" class="nav-link">
+            <i class="fas fa-users"></i> Patients
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_appointments' %}" class="nav-link">
+            <i class="fas fa-calendar-alt"></i> Appointments
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Add a new patient to the system</div>
+
+    {% if form.errors %}
+        <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <strong>Please correct the following errors:</strong>
+            <ul style="margin-top: 10px;">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="form-container" style="max-width: 800px;">
+        <form method="post">
+            {% csrf_token %}
+            
+            <h3 style="color: #8B3A8B; margin-bottom: 20px;">Personal Information</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" name="first_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" name="last_name" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" name="dob">
+                </div>
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select name="gender">
+                        <option value="">-- Select --</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                        <option value="O">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" name="phone">
+                </div>
+                <div class="form-group">
+                    <label>National ID</label>
+                    <input type="text" name="national_id">
+                </div>
+            </div>
+
+            <h3 style="color: #8B3A8B; margin-bottom: 20px; margin-top: 30px;">Address Information</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Province</label>
+                    <input type="text" name="province">
+                </div>
+                <div class="form-group">
+                    <label>District</label>
+                    <input type="text" name="district">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Sector</label>
+                    <input type="text" name="sector">
+                </div>
+                <div class="form-group">
+                    <label>Cell</label>
+                    <input type="text" name="cell">
+                </div>
+            </div>
+
+            <h3 style="color: #8B3A8B; margin-bottom: 20px; margin-top: 30px;">Insurance Information</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Is Insured?</label>
+                    <select name="is_insured" id="is_insured" onchange="toggleInsurance()">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="insurance_fields" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Insurance Provider</label>
+                        <select name="insurer">
+                            <option value="">-- Select --</option>
+                            <option value="RSSB">RSSB</option>
+                            <option value="RAMA">RAMA</option>
+                            <option value="MMI">MMI</option>
+                            <option value="SANLAM">SANLAM</option>
+                            <option value="BRITAM">BRITAM</option>
+                            <option value="OLDMUTUAL">OLDMUTUAL</option>
+                            <option value="PRIME">PRIME</option>
+                            <option value="RADIANT">RADIANT</option>
+                            <option value="EDENCARE">EDENCARE</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Membership Number</label>
+                        <input type="text" name="membership_number">
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Coverage Percentage (%)</label>
+                        <input type="number" name="insurance_coverage_pct" min="0" max="100">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> Register Patient
+            </button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleInsurance() {
+    const isInsured = document.getElementById('is_insured').value === 'true';
+    const insuranceFields = document.getElementById('insurance_fields');
+    insuranceFields.style.display = isInsured ? 'block' : 'none';
+    
+    // Make insurance fields required only when insured
+    const insurerSelect = document.querySelector('select[name="insurer"]');
+    const membershipInput = document.querySelector('input[name="membership_number"]');
+    const coverageInput = document.querySelector('input[name="insurance_coverage_pct"]');
+    
+    if (isInsured) {
+        if (insurerSelect) insurerSelect.setAttribute('required', 'required');
+        if (membershipInput) membershipInput.setAttribute('required', 'required');
+    } else {
+        if (insurerSelect) insurerSelect.removeAttribute('required');
+        if (membershipInput) membershipInput.removeAttribute('required');
+        if (coverageInput) coverageInput.value = '0';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', toggleInsurance);
+</script>
+{% endblock %}

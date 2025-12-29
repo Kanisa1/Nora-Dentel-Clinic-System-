@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+{% load i18n static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans 'Log in' %} | Nora Dental Clinic</title>
+    <link rel="stylesheet" href="{% static 'admin/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'admin/css/login.css' %}">
+    {{ form.media }}
+
+<style>
+
+/* ==================== LOGIN PAGE STYLING ==================== */
+body.login {
+    background: linear-gradient(135deg, #8B3A8B 0%, #6B2A6B 50%, #5B1A5B 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Floating circles */
+body.login::before,
+body.login::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    animation: float 20s infinite ease-in-out;
+}
+
+body.login::before {
+    width: 300px;
+    height: 300px;
+    top: -100px;
+    left: -100px;
+}
+
+body.login::after {
+    width: 400px;
+    height: 400px;
+    bottom: -150px;
+    right: -150px;
+    animation-delay: -10s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(-50px) translateX(50px); }
+    50% { transform: translateY(0) translateX(100px); }
+    75% { transform: translateY(50px) translateX(50px); }
+}
+
+#container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+    z-index: 1;
+}
+
+#content {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 50px 40px;
+    backdrop-filter: blur(10px);
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Logo Section */
+.nora-login-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.nora-login-logo {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #8B3A8B 0%, #6B2A6B 100%);
+    border-radius: 20px;
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(139, 58, 139, 0.3);
+    animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.nora-login-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.nora-login-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2C3E50;
+    margin-bottom: 8px;
+}
+
+.nora-login-subtitle {
+    font-size: 16px;
+    color: #7F8C8D;
+    font-weight: 500;
+}
+
+.nora-login-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #8B3A8B 0%, #E91E63 100%);
+    color: white;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+/* Form */
+.form-row {
+    margin-bottom: 25px;
+}
+
+.form-row label {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+    color: #2C3E50;
+}
+
+.form-row input[type="text"],
+.form-row input[type="password"] {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #E0E0E0;
+    border-radius: 12px;
+    background: #F8F9FA;
+    font-size: 15px;
+    transition: .3s;
+}
+
+.form-row input:focus {
+    border-color: #8B3A8B;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(139, 58, 139, .1);
+}
+
+/* Submit Button — ULTRA AGGRESSIVE FIX */
+.submit-row {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin-top: 25px !important;
+}
+
+.submit-row input[type="submit"],
+input[type="submit"],
+button[type="submit"] {
+    all: unset !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 60px !important;
+    background: linear-gradient(135deg, #8B3A8B, #6B2A6B) !important;
+    color: white !important;
+    padding: 18px 40px !important;
+    border-radius: 12px !important;
+    border: 2px solid #8B3A8B !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 99999 !important;
+    clip: auto !important;
+    clip-path: none !important;
+    transform: none !important;
+    line-height: normal !important;
+}
+
+.submit-row input[type="submit"]:hover {
+    background: linear-gradient(135deg, #6B2A6B, #8B3A8B) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 10px 30px rgba(139, 58, 139, 0.4) !important;
+}
+
+/* Override any admin CSS that might hide the button */
+#content input[type="submit"],
+#content button[type="submit"],
+form input[type="submit"],
+form button[type="submit"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: 60px !important;
+}
+
+/* Footer */
+.login-footer {
+    text-align: center;
+    color: white;
+    margin-top: 20px;
+}
+
+#header { display: none; }
+
+@media (max-width: 480px) {
+    #content { padding: 35px 25px; }
+    .nora-login-logo { width: 80px; height: 80px; }
+}
+
+</style>
+</head>
+<body class="login">
+<div id="container">
+<div id="content">
+
+<div class="nora-login-header">
+    <div class="nora-login-logo">
+        <img src="{% static 'images/logo.png' %}" alt="Logo">
+    </div>
+    <h1 class="nora-login-title">Nora Dental Clinic</h1>
+    <p class="nora-login-subtitle">Healthcare Management System</p>
+    <span class="nora-login-badge">Admin Portal</span>
+</div>
+
+{% if form.errors %}
+<p class="errornote">
+    {% trans "Please correct the errors below." %}
+</p>
+{% endif %}
+
+
+{% if error %}
+<p class="errornote" style="color: #E91E63; font-weight: bold;">{{ error }}</p>
+{% endif %}
+<form method="post" id="login-form">
+    {% csrf_token %}
+    <div class="form-row">
+        <label for="id_username">{% trans "Username" %}:</label>
+        {{ form.username }}
+    </div>
+    <div class="form-row">
+        <label for="id_password">{% trans "Password" %}:</label>
+        {{ form.password }}
+    </div>
+    <div class="submit-row" style="display: block !important; margin-top: 30px !important;">
+        <input type="submit" value="{% trans 'Sign In' %}" style="
+            display: block !important;
+            width: 100% !important;
+            min-height: 60px !important;
+            background: #8B3A8B !important;
+            color: white !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+            border: none !important;
+            border-radius: 12px !important;
+            cursor: pointer !important;
+            padding: 15px !important;
+            margin: 0 !important;
+        ">
+    </div>
+</form>
+
+<div class="login-footer">
+    <p><strong>Nora Dental Clinic</strong></p>
+    <p>© 2025 All Rights Reserved</p>
+</div>
+
+</div>
+</div>
+</body>
+</html>

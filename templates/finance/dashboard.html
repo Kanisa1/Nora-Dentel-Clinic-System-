@@ -1,0 +1,243 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Financial Officer Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .stat-card h3 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+    .stat-card .value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #333;
+    }
+    .stat-card .positive {
+        color: #28a745;
+    }
+    .stat-card .negative {
+        color: #dc3545;
+    }
+    .quick-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    .quick-link-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+    .quick-link-card:hover {
+        transform: translateY(-5px);
+        text-decoration: none;
+        color: white;
+    }
+    .alert-badge {
+        background: #dc3545;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        margin-left: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Financial Officer Dashboard</h1>
+    
+    <!-- Revenue & Profit Overview -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Today's Revenue</h3>
+                <div class="value">{{ today_revenue|floatformat:0 }} RWF</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Month Revenue</h3>
+                <div class="value">{{ month_revenue|floatformat:0 }} RWF</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Year Revenue</h3>
+                <div class="value">{{ year_revenue|floatformat:0 }} RWF</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Month Profit</h3>
+                <div class="value {% if month_profit >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ month_profit|floatformat:0 }} RWF
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expenses & Alerts -->
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Today's Expenses</h3>
+                <div class="value negative">{{ today_expenses|floatformat:0 }} RWF</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Month Expenses</h3>
+                <div class="value negative">{{ month_expenses|floatformat:0 }} RWF</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Pending Approvals</h3>
+                <div class="value">{{ pending_expenses }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Stock Alerts</h3>
+                <div class="value">{{ active_alerts }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Quick Access</h3>
+            <div class="quick-links">
+                <a href="{% url 'income_statement' %}" class="quick-link-card">
+                    <h4>Income Statement</h4>
+                    <p>View detailed revenue & expenses</p>
+                </a>
+                <a href="{% url 'department_financial_report' %}" class="quick-link-card">
+                    <h4>Department Reports</h4>
+                    <p>General, Ortho, OMS, ODS</p>
+                </a>
+                <a href="{% url 'doctor_financial_report' %}" class="quick-link-card">
+                    <h4>Doctor Reports</h4>
+                    <p>Individual & General</p>
+                </a>
+                <a href="{% url 'insurance_report' %}" class="quick-link-card">
+                    <h4>Insurance Reports</h4>
+                    <p>By insurer & beneficiary</p>
+                </a>
+                <a href="{% url 'expense_list' %}" class="quick-link-card">
+                    <h4>Expenses</h4>
+                    <p>Manage & approve
+                        {% if pending_expenses > 0 %}
+                            <span class="alert-badge">{{ pending_expenses }}</span>
+                        {% endif %}
+                    </p>
+                </a>
+                <a href="{% url 'purchase_list' %}" class="quick-link-card">
+                    <h4>Purchases</h4>
+                    <p>Register purchases</p>
+                </a>
+                <a href="{% url 'inventory_dashboard' %}" class="quick-link-card">
+                    <h4>Inventory</h4>
+                    <p>Stock management</p>
+                </a>
+                <a href="{% url 'profit_loss_statement' %}" class="quick-link-card">
+                    <h4>Profit & Loss</h4>
+                    <p>P&L Statement</p>
+                </a>
+                <a href="{% url 'balance_sheet' %}" class="quick-link-card">
+                    <h4>Balance Sheet</h4>
+                    <p>Assets & Liabilities</p>
+                </a>
+                <a href="{% url 'stock_alert_list' %}" class="quick-link-card">
+                    <h4>Stock Alerts</h4>
+                    <p>Low stock & expiry
+                        {% if active_alerts > 0 %}
+                            <span class="alert-badge">{{ active_alerts }}</span>
+                        {% endif %}
+                    </p>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Department Revenue Breakdown -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h3>Current Month - Revenue by Department</h3>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Insurance</th>
+                            <th>Private</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dept in dept_revenue %}
+                        <tr>
+                            <td>{{ dept.visit__department__name|default:"Unknown" }}</td>
+                            <td>{{ dept.total_insurance|floatformat:0 }} RWF</td>
+                            <td>{{ dept.total_private|floatformat:0 }} RWF</td>
+                            <td><strong>{{ dept.total|floatformat:0 }} RWF</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">No data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h3>Recent Transactions</h3>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in recent_invoices|slice:":10" %}
+                        <tr>
+                            <td>{{ invoice.created_at|date:"M d, Y" }}</td>
+                            <td>{{ invoice.visit.patient.first_name }} {{ invoice.visit.patient.last_name }}</td>
+                            <td>{{ invoice.total_insurance|add:invoice.total_private|floatformat:0 }} RWF</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3">No recent transactions</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

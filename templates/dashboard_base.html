@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% block dash_title %}Dashboard - Nora Clinic{% endblock %}{% endblock %}
+{% block page_title %}{% block dash_page_title %}Dashboard{% endblock %}{% endblock %}
+
+{% block content %}
+    {% block dashboard_content %}{% endblock %}
+{% endblock %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

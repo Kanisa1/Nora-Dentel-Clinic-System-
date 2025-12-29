@@ -1,0 +1,175 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}My Patients - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-user-injured"></i> My Patients
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'doctor-dashboard' %}" class="nav-link">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'doctor_patient_list' %}" class="nav-link active">
+            <i class="fas fa-user-injured"></i> My Patients
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Patients in your queue and assigned to you</div>
+
+    <div style="display: grid; grid-template-columns: 1fr; gap: 30px;">
+        <!-- Waiting Queue -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-clock"></i> Patients in Waiting Queue (Today)
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Patient Name</th>
+                        <th>Age</th>
+                        <th>Phone</th>
+                        <th>Insurance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in waiting_patients %}
+                        <tr>
+                            <td><strong>#{{ entry.position }}</strong></td>
+                            <td>{{ entry.visit.patient.first_name }} {{ entry.visit.patient.last_name }}</td>
+                            <td>{{ entry.visit.patient.age }}</td>
+                            <td>{{ entry.visit.patient.phone }}</td>
+                            <td>
+                                {% if entry.visit.patient.is_insured %}
+                                    <span class="badge badge-info">{{ entry.visit.patient.insurer }}</span>
+                                {% else %}
+                                    <span class="badge badge-success">Private</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if entry.status == 'waiting' %}
+                                    <span class="badge badge-warning">Waiting</span>
+                                {% else %}
+                                    <span class="badge badge-info">In Consultation</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <!-- Add Triage -->
+                                    <a href="{% url 'medical_record_form' entry.visit.id %}" class="btn-small" style="background: #3b82f6; color: white;">
+                                        <i class="fas fa-heartbeat"></i> Add Triage
+                                    </a>
+                                    <!-- Add Billing -->
+                                    <a href="{% url 'billing_sheet' entry.visit.id %}" class="btn-small" style="background: #10b981; color: white;">
+                                        <i class="fas fa-file-invoice-dollar"></i> Add Billing
+                                    </a>
+                                    {% if entry.visit.triage %}
+                                    <!-- Save Records -->
+                                    <a href="{% url 'medical_record_form' entry.visit.id %}" class="btn-small" style="background: #8b5cf6; color: white;">
+                                        <i class="fas fa-save"></i> Save Records
+                                    </a>
+                                    {% endif %}
+                                    {% if entry.visit.triage and entry.visit.billing_items.exists %}
+                                    <!-- Send to Cashier -->
+                                    <a href="{% url 'send_to_cashier' entry.visit.id %}" class="btn-small" style="background: #f59e0b; color: white;" onclick="return confirm('Send patient to cashier?')">
+                                        <i class="fas fa-cash-register"></i> Send to Cashier
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #999; padding: 30px;">
+                                No patients in queue
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- All Assigned Patients -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-user-check"></i> All Patients Assigned to You
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Patient Name</th>
+                        <th>Age</th>
+                        <th>Department</th>
+                        <th>Insurance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in all_visits %}
+                        <tr>
+                            <td>{{ visit.patient.first_name }} {{ visit.patient.last_name }}</td>
+                            <td>{{ visit.patient.age }}</td>
+                            <td>{{ visit.department.name }}</td>
+                            <td>
+                                {% if visit.patient.is_insured %}
+                                    <span class="badge badge-info">{{ visit.patient.insurer }}</span>
+                                {% else %}
+                                    <span class="badge badge-success">Private</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if visit.status == 'open' %}
+                                    <span class="badge badge-warning">Open</span>
+                                {% elif visit.status == 'billed' %}
+                                    <span class="badge badge-success">Billed</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Closed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <!-- Add Triage -->
+                                    <a href="{% url 'medical_record_form' visit.id %}" class="btn-small" style="background: #3b82f6; color: white;">
+                                        <i class="fas fa-heartbeat"></i> Add Triage
+                                    </a>
+                                    <!-- Add Billing -->
+                                    <a href="{% url 'billing_sheet' visit.id %}" class="btn-small" style="background: #10b981; color: white;">
+                                        <i class="fas fa-file-invoice-dollar"></i> Add Billing
+                                    </a>
+                                    {% if visit.triage %}
+                                    <!-- Save Records -->
+                                    <a href="{% url 'medical_record_form' visit.id %}" class="btn-small" style="background: #8b5cf6; color: white;">
+                                        <i class="fas fa-save"></i> Save Records
+                                    </a>
+                                    {% endif %}
+                                    {% if visit.triage and visit.billing_items.exists %}
+                                    <!-- Send to Cashier -->
+                                    <a href="{% url 'send_to_cashier' visit.id %}" class="btn-small" style="background: #f59e0b; color: white;" onclick="return confirm('Send patient to cashier?')">
+                                        <i class="fas fa-cash-register"></i> Send to Cashier
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #999; padding: 30px;">
+                                No patients assigned
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

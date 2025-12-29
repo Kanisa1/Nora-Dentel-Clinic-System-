@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Invoice {{ invoice.id }} - Nora Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-file-invoice"></i>
+        Invoice #{{ invoice.id }}
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Print Button -->
+    <div class="flex justify-end gap-2">
+        <button onclick="window.print()" class="bg-clinic-purple hover:bg-clinic-dark text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2">
+            <i class="fas fa-print"></i> Print Invoice
+        </button>
+        <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold">
+            Back
+        </button>
+    </div>
+
+    <!-- Invoice Container -->
+    <div class="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-8 border-b-2 border-clinic-purple pb-6">
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-clinic-purple rounded-full flex items-center justify-center">
+                        <i class="fas fa-tooth text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-clinic-dark">Nora Dental Clinic</h1>
+                        <p class="text-gray-600 text-sm">Kigali, Rwanda</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right">
+                <h2 class="text-3xl font-bold text-clinic-purple">INVOICE</h2>
+                <p class="text-gray-600">#{{ invoice.id }}</p>
+            </div>
+        </div>
+
+        <!-- Patient & Invoice Details -->
+        <div class="grid grid-cols-2 gap-8 mb-8">
+            <!-- Patient Information -->
+            <div>
+                <h3 class="font-bold text-clinic-dark mb-3">PATIENT INFORMATION</h3>
+                <div class="space-y-2 text-sm">
+                    <p><span class="font-semibold">Name:</span> {{ invoice.visit.patient.first_name }} {{ invoice.visit.patient.last_name }}</p>
+                    <p><span class="font-semibold">Age:</span> {{ invoice.visit.patient.age }} years</p>
+                    <p><span class="font-semibold">Gender:</span> 
+                        {% if invoice.visit.patient.gender == 'M' %}Male
+                        {% elif invoice.visit.patient.gender == 'F' %}Female
+                        {% else %}—{% endif %}</p>
+                    <p><span class="font-semibold">Phone:</span> {{ invoice.visit.patient.phone|default:"—" }}</p>
+                    {% if invoice.visit.patient.is_insured %}
+                        <p><span class="font-semibold">Insurance:</span> {{ invoice.visit.patient.insurer }}</p>
+                        <p><span class="font-semibold">Membership #:</span> {{ invoice.visit.patient.membership_number }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Invoice Details -->
+            <div class="text-right">
+                <div class="space-y-2 text-sm">
+                    <p><span class="font-semibold">Invoice Date:</span> {{ invoice.created_at|date:"d/m/Y" }}</p>
+                    <p><span class="font-semibold">Invoice Time:</span> {{ invoice.created_at|time:"H:i" }}</p>
+                    <p><span class="font-semibold">Doctor:</span> Dr. {{ invoice.visit.doctor.user.get_full_name|default:"—" }}</p>
+                    <p><span class="font-semibold">Visit Type:</span> 
+                        <span class="px-3 py-1 bg-clinic-light text-clinic-dark rounded text-xs font-semibold">
+                            {{ invoice.get_status_display }}
+                        </span>
+                    </p>
+                    <p><span class="font-semibold">Status:</span> 
+                        {% if invoice.paid %}
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">PAID</span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">UNPAID</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Items Table -->
+        <div class="mb-8">
+            <h3 class="font-bold text-clinic-dark mb-3">BILLING ITEMS</h3>
+            <table class="w-full border border-gray-300">
+                <thead class="bg-clinic-light">
+                    <tr>
+                        <th class="border px-4 py-2 text-left font-semibold">Description</th>
+                        <th class="border px-4 py-2 text-center font-semibold">Qty</th>
+                        <th class="border px-4 py-2 text-right font-semibold">Unit Price</th>
+                        <th class="border px-4 py-2 text-right font-semibold">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.visit.billing_items.all %}
+                        <tr>
+                            <td class="border px-4 py-2">{{ item.tariff.name }}</td>
+                            <td class="border px-4 py-2 text-center">{{ item.qty }}</td>
+                            <td class="border px-4 py-2 text-right">RWF {{ item.price_private_snapshot|floatformat:0 }}</td>
+                            <td class="border px-4 py-2 text-right font-semibold">
+                                RWF {{ item.qty|mul:item.price_private_snapshot|floatformat:0 }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="grid grid-cols-2 gap-8 mb-8">
+            <div></div>
+            <div class="space-y-3">
+                <div class="flex justify-between text-lg">
+                    <span class="font-semibold">Subtotal:</span>
+                    <span>RWF {{ invoice.total_private|floatformat:0 }}</span>
+                </div>
+                <div class="flex justify-between text-lg">
+                    <span class="font-semibold">Insurance Coverage:</span>
+                    <span>RWF {{ invoice.total_insurance|floatformat:0 }}</span>
+                </div>
+                <div class="border-t-2 border-clinic-purple pt-3 flex justify-between text-2xl">
+                    <span class="font-bold">TOTAL:</span>
+                    <span class="font-bold text-clinic-purple">RWF {{ invoice.total_private|add:invoice.total_insurance|floatformat:0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="grid grid-cols-3 gap-8 mt-12">
+            <div>
+                <p class="border-t-2 border-gray-400 pt-2 text-center text-sm font-semibold">Doctor Signature</p>
+                <p class="text-center text-xs text-gray-600 mt-1">Dr. {{ invoice.visit.doctor.user.get_full_name|default:"—" }}</p>
+            </div>
+            <div>
+                <p class="border-t-2 border-gray-400 pt-2 text-center text-sm font-semibold">Patient Signature</p>
+                <p class="text-center text-xs text-gray-600 mt-1"></p>
+            </div>
+            <div>
+                <p class="border-t-2 border-gray-400 pt-2 text-center text-sm font-semibold">Cashier</p>
+                <p class="text-center text-xs text-gray-600 mt-1">{{ invoice.created_by.user.get_full_name|default:"—" }}</p>
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="text-center mt-8 pt-6 border-t">
+            <p class="text-xs text-gray-600 mb-2">Receipt Number: {{ invoice.receipt_number|default:"—" }}</p>
+            <p class="text-xs text-gray-600">For inquiries: contact@noraclinic.rw | +250 781 234 567</p>
+        </div>
+    </div>
+
+    <!-- Action Buttons (Payment) -->
+    {% if not invoice.paid %}
+        <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+            <h3 class="text-xl font-bold text-clinic-dark mb-4">Record Payment</h3>
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Payment Method</label>
+                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2" name="method">
+                            <option>Select Method</option>
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                            <option value="insurance">Insurance</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Amount (RWF)</label>
+                        <input type="number" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                               name="amount" value="{{ invoice.total_private|floatformat:0 }}" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">&nbsp;</label>
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition">
+                            <i class="fas fa-check"></i> Mark as Paid
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="bg-green-100 border-l-4 border-green-600 rounded-lg p-6 max-w-4xl mx-auto">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                <div>
+                    <p class="font-bold text-green-800">Payment Received</p>
+                    <p class="text-sm text-green-700">This invoice was marked as paid on {{ invoice.paid_at|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style media="print">
+    @media print {
+        .no-print {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    }
+</style>
+{% endblock %}

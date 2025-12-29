@@ -1,0 +1,214 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Add Billing Items - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-receipt"></i> Add Billing Items & Generate Invoice
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Select procedures/acts provided to patient</div>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h3 style="color: #8B3A8B; margin-bottom: 15px;">
+            <i class="fas fa-user"></i> {{ patient.first_name }} {{ patient.last_name }}
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div><strong>Department:</strong> {{ visit.department.name }}</div>
+            <div><strong>Insurance:</strong> {% if patient.is_insured %}Yes ({{ patient.insurer }}){% else %}Private{% endif %}</div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <!-- Available Tariff Acts -->
+        <div class="table-container">
+            <h4 style="color: #8B3A8B; margin-bottom: 15px;">
+                <i class="fas fa-list"></i> Available Acts/Procedures
+            </h4>
+            <table style="font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Private</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tariff in tariff_acts %}
+                        <tr>
+                            <td><strong>{{ tariff.code }}</strong></td>
+                            <td>{{ tariff.name }}</td>
+                            <td>
+                                RWF {{ tariff.price_private }}
+                                {% if patient.is_insured and tariff.price_insurance %}
+                                    <br><small style="color: #666;">Ins: RWF {{ tariff.price_insurance }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn-small btn-view" onclick="addBillingItem({{ tariff.id }})">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">No acts available for this department</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Selected Billing Items -->
+        <div class="table-container">
+            <h4 style="color: #8B3A8B; margin-bottom: 15px;">
+                <i class="fas fa-check-circle"></i> Selected Items
+            </h4>
+            <table id="billingItemsTable" style="font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="billingItemsBody">
+                    {% for item in existing_items %}
+                        <tr id="item-{{ item.id }}">
+                            <td>{{ item.tariff.code }}</td>
+                            <td>{{ item.tariff.name }}</td>
+                            <td>RWF {{ item.price_private_snapshot }}</td>
+                            <td>{{ item.qty }}</td>
+                            <td>RWF {{ item.price_private_snapshot|add:item.qty }}</td>
+                            <td>
+                                <button type="button" class="btn-small btn-delete" onclick="removeBillingItem({{ item.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr id="empty-row">
+                            <td colspan="6" style="text-align: center; color: #999;">No items selected yet</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Totals -->
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <strong>Total Private:</strong>
+                        <p style="font-size: 18px; color: #27ae60; margin: 5px 0;">
+                            RWF <span id="totalPrivate">0</span>
+                        </p>
+                    </div>
+                    {% if patient.is_insured %}
+                        <div>
+                            <strong>Total Insurance:</strong>
+                            <p style="font-size: 18px; color: #3498db; margin: 5px 0;">
+                                RWF <span id="totalInsurance">0</span>
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form for submission -->
+    <form method="post" id="billingForm" style="margin-top: 30px;">
+        {% csrf_token %}
+        <input type="hidden" name="tariff_ids" id="tariffIds" value="">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <a href="{% url 'doctor_patient_list' %}" class="btn btn-primary" style="text-align: center; text-decoration: none; padding: 12px 20px;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <button type="button" class="btn btn-primary" onclick="clearAllItems()" style="width: 100%; padding: 12px 20px;">
+                <i class="fas fa-trash"></i> Clear All
+            </button>
+            <button type="submit" class="btn-submit" {% if not existing_items %}disabled{% endif %}>
+                <i class="fas fa-check-circle"></i> Generate Invoice
+            </button>
+        </div>
+    </form>
+
+    <script>
+    var visitId = {{ visit.id }};
+    var selectedItems = {};
+
+    // Initialize selected items from existing
+    {% for item in existing_items %}
+        selectedItems[{{ item.tariff.id }}] = {{ item.id }};
+    {% endfor %}
+
+    function addBillingItem(tariffId) {
+        fetch('/dashboard/api/add-billing-item/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                visit_id: visitId,
+                tariff_id: tariffId,
+                qty: 1
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Item added successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function removeBillingItem(itemId) {
+        if (confirm('Remove this item?')) {
+            fetch('/dashboard/api/remove-billing-item/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    item_id: itemId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('item-' + itemId).remove();
+                    alert('Item removed');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+
+    function clearAllItems() {
+        if (confirm('Remove all items?')) {
+            location.reload();
+        }
+    }
+
+    // Update tariff IDs before submission
+    document.getElementById('billingForm').onsubmit = function() {
+        var tariffIds = Object.keys(selectedItems).join(',');
+        document.getElementById('tariffIds').value = tariffIds;
+    };
+    </script>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Billing Sheet - {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Billing Sheet</h1>
+                <p class="text-gray-600 mt-1">Patient: {{ patient.first_name }} {{ patient.last_name }} ({{ patient.age }} yrs)</p>
+            </div>
+            <a href="{% url 'doctor_dashboard_enhanced' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Patient Info Card -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">Insurance</p>
+                <p class="font-semibold">{{ patient.insurer|default:"None" }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Coverage</p>
+                <p class="font-semibold">{{ coverage_pct }}%</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Member Number</p>
+                <p class="font-semibold">{{ patient.membership_number|default:"N/A" }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Visit Date</p>
+                <p class="font-semibold">{{ visit.created_at|date:"d M Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Add Items -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Add Billing Item</h2>
+                
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Act/Procedure</label>
+                        <select name="tariff_id" required class="w-full border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500" id="tariffSelect">
+                            <option value="">-- Select --</option>
+                            {% for tariff in tariff_acts %}
+                            <option value="{{ tariff.code }}" data-insurance="{{ tariff.RAMA_MMI_MISUR }}" data-private="{{ tariff.PRIVATE_INSURANCE_OTHER }}" data-selected="{{ tariff.selected_price }}">
+                                {{ tariff.code }} - {{ tariff.name }} (Insurance: {{ tariff.RAMA_MMI_MISUR }} RWF, Private: {{ tariff.PRIVATE_INSURANCE_OTHER }} RWF)
+                            </option>
+                            {% endfor %}
+                        </select>
+                        </select>
+                    </div>
+
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                        <input type="number" name="qty" value="1" min="1" class="w-full border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Details/Notes (will appear on invoice) <span class="text-red-600">*</span></label>
+                        <textarea name="notes" rows="2" class="w-full border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500" placeholder="Add details for this act" required></textarea>
+                        <p class="text-xs text-gray-500 mt-1">This field is required.</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Price Information</p>
+                        <div class="mt-2 space-y-1">
+                            <p class="text-sm"><span class="font-medium">Private:</span> <span id="privatePrice" class="text-green-600 font-bold">0 RWF</span></p>
+                            <p class="text-sm"><span class="font-medium">Insurance:</span> <span id="insurancePrice" class="text-blue-600 font-bold">0 RWF</span></p>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Billing Items Table -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Billing Items</h2>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details/Notes</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Qty</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Private</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Insurance</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for item in billing_items %}
+                            <tr>
+                                <td class="px-4 py-3 text-sm text-gray-900">{{ item.code }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">{{ item.name }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">{{ item.notes }}</td>
+                                <td class="px-4 py-3 text-sm text-center text-gray-900">{{ item.qty }}</td>
+                                <td class="px-4 py-3 text-sm text-right text-gray-900">{{ item.price_private_snapshot|floatformat:0 }}</td>
+                                <td class="px-4 py-3 text-sm text-right text-gray-900">{{ item.price_insurance_snapshot|floatformat:0 }}</td>
+                                <td class="px-4 py-3 text-sm text-right font-semibold text-gray-900">
+                                    {% widthratio item.qty 1 item.price_private_snapshot as private_total %}
+                                    {% widthratio item.qty 1 item.price_insurance_snapshot as insurance_total %}
+                                    {{ private_total|add:insurance_total|floatformat:0 }}
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="deleteItem({{ item.id }})" class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="px-4 py-6 text-center text-gray-500">No billing items added yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Summary -->
+                {% if billing_items %}
+                <div class="px-6 py-4 border-t-2 border-gray-200 bg-gray-50">
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Total Private Acts:</span>
+                            <span class="font-semibold">{{ total_private|floatformat:0 }} RWF</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Total Insurance Acts:</span>
+                            <span class="font-semibold">{{ total_insurance|floatformat:0 }} RWF</span>
+                        </div>
+                        <div class="flex justify-between text-sm border-t pt-2">
+                            <span class="text-gray-600">Insurance Pays ({{ coverage_pct }}%):</span>
+                            <span class="font-semibold text-blue-600">{{ insurance_pays|floatformat:0 }} RWF</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Patient Pays (Insurance):</span>
+                            <span class="font-semibold">{{ patient_pays_insurance|floatformat:0 }} RWF</span>
+                        </div>
+                        <div class="flex justify-between text-lg font-bold border-t-2 pt-2">
+                            <span class="text-gray-800">Total Patient Responsibility:</span>
+                            <span class="text-green-600">{{ patient_pays_total|floatformat:0 }} RWF</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-6 flex gap-4 justify-center">
+        {% if not visit.triage %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 w-full">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
+                <p class="text-yellow-800">
+                    <strong>Next Step:</strong> Return to dashboard and click "Add Triage" to record patient vitals and symptoms before sending to cashier.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <a href="{% url 'medical_record_form' visit.id %}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-medium">
+            <i class="fas fa-heartbeat mr-2"></i> 
+            {% if visit.triage %}Edit Triage{% else %}Add Triage{% endif %}
+        </a>
+        
+        {% if visit.triage and billing_items.exists %}
+        <a href="{% url 'send_to_cashier' visit.id %}" class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md font-medium" onclick="return confirm('Send patient to cashier for payment?')">
+            <i class="fas fa-cash-register mr-2"></i> Send to Cashier
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Update price display when tariff is selected
+document.getElementById('tariffSelect').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const insurancePrice = selected.getAttribute('data-insurance');
+    const privatePrice = selected.getAttribute('data-private');
+    document.getElementById('insurancePrice').textContent = insurancePrice ? `${parseFloat(insurancePrice).toLocaleString()} RWF` : '0 RWF';
+    document.getElementById('privatePrice').textContent = privatePrice ? `${parseFloat(privatePrice).toLocaleString()} RWF` : '0 RWF';
+});
+
+// Delete billing item
+function deleteItem(itemId) {
+    if (confirm('Are you sure you want to remove this item?')) {
+        fetch(`/doctor/billing/delete/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error deleting item');
+        });
+    }
+}
+</script>
+{% endblock %}

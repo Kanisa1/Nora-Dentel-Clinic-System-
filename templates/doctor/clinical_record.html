@@ -1,0 +1,127 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Clinical Record - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-stethoscope"></i> Patient Clinical Record
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Fill patient clinical information</div>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h3 style="color: #8B3A8B; margin-bottom: 15px;">
+            <i class="fas fa-user"></i> {{ patient.first_name }} {{ patient.last_name }}
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div><strong>ID:</strong> {{ patient.id }}</div>
+            <div><strong>Age:</strong> {{ patient.age }}</div>
+            <div><strong>Phone:</strong> {{ patient.phone }}</div>
+            <div><strong>Insurance:</strong> {% if patient.is_insured %}Yes ({{ patient.insurer }}){% else %}No{% endif %}</div>
+        </div>
+    </div>
+
+    <form method="post" class="form-container">
+        {% csrf_token %}
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-comment-medical"></i> Chief Complaint
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="chief_complaint" placeholder="What is the patient's main complaint?" required></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-history"></i> History of Present Illness
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="history_present_illness" placeholder="Detailed history of the complaint..." rows="4"></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-file-alt"></i> Past Medical & Dental History
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="past_medical_history" placeholder="Previous medical conditions, treatments, surgeries..." rows="3"></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-family"></i> Social & Family History
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="social_family_history" placeholder="Family medical history, occupation, habits..." rows="3"></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-heartbeat"></i> Review of Systems
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="review_systems" placeholder="General, cardiovascular, respiratory, GI systems review..." rows="3"></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-user-check"></i> General Medical Examination
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="general_examination" placeholder="Vital signs, general appearance, weight, height..." rows="3"></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-tooth"></i> Dental Examination
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="dental_examination" placeholder="Intraoral and extraoral examination findings..." rows="4" required></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-microscope"></i> Investigations
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="investigations" placeholder="Lab tests, X-rays, radiographs, other imaging..." rows="3"></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-diagnoses"></i> Diagnosis
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="diagnosis" placeholder="Clinical diagnosis based on findings..." rows="3" required></textarea>
+            </div>
+        </div>
+
+        <h4 style="color: #8B3A8B; margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E8B4E8; padding-bottom: 10px;">
+            <i class="fas fa-list-check"></i> Treatment Plan
+        </h4>
+        <div class="form-row full">
+            <div class="form-group">
+                <textarea name="treatment_plan" placeholder="Proposed treatment steps and timeline..." rows="4" required></textarea>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px;">
+            <a href="{% url 'doctor_patient_list' %}" class="btn btn-primary" style="text-align: center; text-decoration: none; padding: 12px 20px;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> Save & Continue to Billing
+            </button>
+        </div>
+    </form>
+{% endblock %}

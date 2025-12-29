@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Appointment - Nora Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2">
+        <i class="fas fa-edit"></i>
+        Edit Appointment
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-clinic-purple">Edit Appointment Details</h2>
+            <p class="text-gray-600 mt-2">Update appointment information below</p>
+        </div>
+
+        <form method="POST" action="{% url 'reception_edit_appointment' appointment.id %}" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Patient Information (Read-only) -->
+            <div class="bg-clinic-light p-4 rounded-lg">
+                <h3 class="font-semibold text-clinic-dark mb-2">Patient Information</h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Name:</span>
+                        <span class="font-semibold ml-2">{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Phone:</span>
+                        <span class="font-semibold ml-2">{{ appointment.patient.phone }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date and Time -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="scheduled_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar"></i> Appointment Date *
+                    </label>
+                    <input 
+                        type="date" 
+                        id="scheduled_date" 
+                        name="scheduled_date" 
+                        value="{{ appointment.scheduled_at|date:'Y-m-d' }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-purple focus:border-transparent"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="scheduled_time" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-clock"></i> Appointment Time *
+                    </label>
+                    <input 
+                        type="time" 
+                        id="scheduled_time" 
+                        name="scheduled_time" 
+                        value="{{ appointment.scheduled_at|date:'H:i' }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-purple focus:border-transparent"
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Department Selection -->
+            <div>
+                <label for="department" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-hospital"></i> Department *
+                </label>
+                <select 
+                    id="department" 
+                    name="department" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-purple focus:border-transparent"
+                    required
+                    onchange="updateDoctorsForEdit()"
+                >
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if dept.id == appointment.department.id %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Doctor Selection -->
+            <div>
+                <label for="doctor" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-user-md"></i> Doctor *
+                </label>
+                <select 
+                    id="doctor" 
+                    name="doctor" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-purple focus:border-transparent"
+                    required
+                >
+                    <option value="">Select Doctor</option>
+                    {% for doc in doctors %}
+                        <option value="{{ doc.id }}" {% if doc.id == appointment.doctor.id %}selected{% endif %}>
+                            {{ doc.user.get_full_name }} - {{ doc.department.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-notes-medical"></i> Notes
+                </label>
+                <textarea 
+                    id="notes" 
+                    name="notes" 
+                    rows="4"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-purple focus:border-transparent"
+                    placeholder="Additional notes or special instructions..."
+                >{{ appointment.notes }}</textarea>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-info-circle"></i> Status *
+                </label>
+                <select 
+                    id="status" 
+                    name="status" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-purple focus:border-transparent"
+                    required
+                >
+                    <option value="scheduled" {% if appointment.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                    <option value="checked_in" {% if appointment.status == 'checked_in' %}selected{% endif %}>Checked In</option>
+                    <option value="completed" {% if appointment.status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if appointment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4 pt-4">
+                <button 
+                    type="submit" 
+                    class="flex-1 bg-clinic-purple text-white px-6 py-3 rounded-lg hover:bg-clinic-dark transition font-semibold"
+                >
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a 
+                    href="{% url 'reception_appointments' %}" 
+                    class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition text-center font-semibold"
+                >
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateDoctorsForEdit() {
+    const departmentId = document.getElementById('department').value;
+    const doctorSelect = document.getElementById('doctor');
+    
+    if (!departmentId) {
+        doctorSelect.innerHTML = '<option value="">Select Department First</option>';
+        return;
+    }
+    
+    fetch(`/dashboard/doctors-by-department/?department_id=${departmentId}`)
+        .then(response => response.json())
+        .then(doctors => {
+            doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+            doctors.forEach(doctor => {
+                const option = document.createElement('option');
+                option.value = doctor.id;
+                option.textContent = `${doctor.name} - ${doctor.department}`;
+                doctorSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading doctors:', error);
+            doctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
+        });
+}
+</script>
+{% endblock %}

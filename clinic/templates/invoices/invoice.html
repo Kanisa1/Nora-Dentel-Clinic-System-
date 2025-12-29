@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; color:#222; }
+header { display:flex; align-items:center; }
+.logo { width:140px; height:auto; margin-right:16px; }
+.clinic-info { font-size:14px; }
+table { width:100%; border-collapse: collapse; margin-top:12px; }
+table th, table td { border:1px solid #ccc; padding:6px; text-align:left; }
+.totals { text-align:right; margin-top:12px; }
+.signatures { margin-top:36px; display:flex; justify-content:space-between; }
+.sign { width:45%; border-top:1px solid #333; text-align:center; padding-top:6px; }
+</style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="file://{{ logo_path }}" alt="Clinic Logo" />
+    <div class="clinic-info">
+      <strong>Nora Dental Clinic</strong><br/>
+      Address: KIGALI / GASABO<br/>
+      Email: norhadentalclinic@gmail.com | Tel: +250798287919
+    </div>
+  </header>
+
+  <h2>Invoice #{{ invoice.id }}</h2>
+  <div>
+    <strong>Patient:</strong> {{ invoice.visit.patient.first_name }} {{ invoice.visit.patient.last_name }} <br/>
+    <strong>Patient ID:</strong> {{ invoice.visit.patient.id }} &nbsp; &nbsp; 
+    <strong>Date:</strong> {{ invoice.created_at|date:"Y-m-d H:i" }}
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Act</th><th>Qty</th><th>Unit Price</th><th>Patient Share</th><th>Insurance Share</th></tr>
+    </thead>
+    <tbody>
+      {% for it in invoice.visit.billing_items.all %}
+      <tr>
+        <td>{{ it.tariff.name }}</td>
+        <td>{{ it.qty }}</td>
+        <td>{{ it.price_private_snapshot }}</td>
+        <td>{{ (it.price_private_snapshot * it.qty) | floatformat:2 }}</td>
+        <td>{{ (it.price_insurance_snapshot * it.qty) | default:"0.00" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <p><strong>Patient Total:</strong> {{ invoice.total_private }}</p>
+    <p><strong>Insurance Total:</strong> {{ invoice.total_insurance }}</p>
+  </div>
+
+  <div class="signatures">
+    <div class="sign">Patient Signature</div>
+    <div class="sign">Doctor Signature</div>
+  </div>
+</body>
+</html>

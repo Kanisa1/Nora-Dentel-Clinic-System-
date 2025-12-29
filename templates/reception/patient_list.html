@@ -1,0 +1,97 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Patient List - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-users"></i> Patient Records
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'reception_dashboard' %}" class="nav-link">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_register_patient' %}" class="nav-link">
+            <i class="fas fa-user-plus"></i> Register Patient
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'reception_patients' %}" class="nav-link active">
+            <i class="fas fa-users"></i> Patients
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">View and manage patient records</div>
+
+    <div class="table-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 class="table-title" style="margin-bottom: 0;">All Patients</h3>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="search" placeholder="Search patients..." style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                <a href="{% url 'reception_register_patient' %}" class="btn btn-primary" style="padding: 8px 15px; font-size: 12px;">
+                    <i class="fas fa-plus"></i> New Patient
+                </a>
+            </div>
+        </div>
+
+        <table id="patients_table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Insurance</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                    <tr>
+                        <td><strong>#{{ patient.id }}</strong></td>
+                        <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+                        <td>{{ patient.phone }}</td>
+                        <td>
+                            {% if patient.is_insured %}
+                                <span class="badge badge-success">{{ patient.insurer }}</span>
+                            {% else %}
+                                <span class="badge badge-warning">Private</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ patient.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'patient_profile' patient.id %}" class="btn-small btn-view">View Profile</a>
+                                <a href="{% url 'reception_create_visit' %}?patient={{ patient.id }}" class="btn-small btn-edit">Create Visit</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #999;">No patients found</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('search').addEventListener('keyup', function() {
+    const filter = this.value.toLowerCase();
+    const table = document.getElementById('patients_table');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    
+    for (let row of rows) {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    }
+});
+</script>
+{% endblock %}

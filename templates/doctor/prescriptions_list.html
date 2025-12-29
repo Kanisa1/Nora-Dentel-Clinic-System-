@@ -1,0 +1,69 @@
+{% extends 'doctor/base_doctor.html' %}
+
+{% block title %}My Prescriptions - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}My Prescriptions{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-prescription-bottle-alt text-green-600 mr-2"></i>
+            All Prescriptions
+        </h2>
+        <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
+            {{ prescriptions.count }} Total
+        </span>
+    </div>
+
+    {% if prescriptions %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gradient-to-r from-green-600 to-teal-600">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Patient Name</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Items</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for prescription in prescriptions %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ prescription.created_at|date:"M d, Y" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ prescription.patient.user.get_full_name }}</div>
+                        <div class="text-xs text-gray-500">{{ prescription.patient.patient_id }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium {% if prescription.prescription_type == 'clinic' %}bg-blue-100 text-blue-800{% else %}bg-purple-100 text-purple-800{% endif %}">
+                            {{ prescription.get_prescription_type_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {{ prescription.items.count }} item{{ prescription.items.count|pluralize }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <a href="{% url 'print_prescription' prescription.id %}" target="_blank" class="inline-flex items-center text-blue-600 hover:text-blue-900">
+                            <i class="fas fa-print mr-1"></i> Print
+                        </a>
+                        <a href="{% url 'doctor-visit-detail' prescription.visit.id %}" class="inline-flex items-center text-green-600 hover:text-green-900">
+                            <i class="fas fa-eye mr-1"></i> View Visit
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <i class="fas fa-pills text-gray-300 text-6xl mb-4"></i>
+        <p class="text-gray-500 text-lg">No prescriptions issued yet</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

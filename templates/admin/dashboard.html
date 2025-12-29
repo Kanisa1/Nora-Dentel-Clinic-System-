@@ -1,0 +1,205 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Nora Dental Clinic{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-chart-line"></i> Admin Dashboard
+{% endblock %}
+
+{% block nav_items %}
+    <li class="nav-item">
+        <a href="{% url 'admin_dashboard' %}" class="nav-link active">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'admin_users' %}" class="nav-link">
+            <i class="fas fa-users"></i> Users
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'admin_departments' %}" class="nav-link">
+            <i class="fas fa-building"></i> Departments
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'admin_doctors' %}" class="nav-link">
+            <i class="fas fa-stethoscope"></i> Doctors
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'admin_patients' %}" class="nav-link">
+            <i class="fas fa-user-injured"></i> Patients
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'admin_tariff' %}" class="nav-link">
+            <i class="fas fa-list"></i> Tariffs
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'admin_invoices' %}" class="nav-link">
+            <i class="fas fa-receipt"></i> Invoices
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'admin_settings' %}" class="nav-link">
+            <i class="fas fa-cog"></i> Settings
+        </a>
+    </li>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="page-subtitle">Welcome back! Here's your clinic overview</div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_patients }}</div>
+            <div class="stat-label">Total Patients</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ today_visits }}</div>
+            <div class="stat-label">Today's Visits</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">{{ total_doctors }}</div>
+            <div class="stat-label">Doctors</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ pending_invoices }}</div>
+            <div class="stat-label">Pending Invoices</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">{{ total_revenue }}</div>
+            <div class="stat-label">Revenue (RWF)</div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px;">
+        <!-- Recent Patients -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-users"></i> Recent Patients
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in recent_patients %}
+                        <tr>
+                            <td><strong>{{ patient.first_name }} {{ patient.last_name }}</strong></td>
+                            <td>{{ patient.phone }}</td>
+                            <td>
+                                {% if patient.is_insured %}
+                                    <span class="badge badge-success">Insured</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Private</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-small btn-view" onclick="viewPatient({{ patient.id }})">View</button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">No recent patients</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Invoices -->
+        <div class="table-container">
+            <h3 class="table-title">
+                <i class="fas fa-receipt"></i> Recent Invoices
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Patient</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in recent_invoices %}
+                        <tr>
+                            <td><strong>#{{ invoice.id }}</strong></td>
+                            <td>{{ invoice.visit.patient.first_name }} {{ invoice.visit.patient.last_name }}</td>
+                            <td>{{ invoice.total_amount|default:"0" }} RWF</td>
+                            <td>
+                                {% if invoice.status == 'pending' %}
+                                    <span class="badge badge-warning">Pending</span>
+                                {% elif invoice.status == 'paid' %}
+                                    <span class="badge badge-success">Paid</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">No recent invoices</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Departments -->
+    <div class="table-container" style="margin-top: 30px;">
+        <h3 class="table-title">
+            <i class="fas fa-building"></i> Departments
+        </h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Department Name</th>
+                    <th>Doctor Count</th>
+                    <th>Today's Visits</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for department in departments %}
+                    <tr>
+                        <td><strong>{{ department.name }}</strong></td>
+                        <td>{{ department.doctors_count }}</td>
+                        <td>{{ department.visits_today }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-small btn-view">View</button>
+                                <button class="btn-small btn-edit">Edit</button>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #999;">No departments</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewPatient(patientId) {
+    window.location.href = `/admin/patients/${patientId}/`;
+}
+</script>
+{% endblock %}

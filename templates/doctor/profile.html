@@ -1,0 +1,184 @@
+{% extends 'doctor/base_doctor.html' %}
+{% load static %}
+
+{% block title %}Doctor Profile - Nora Dental Clinic{% endblock %}
+{% block page_title %}
+    <span class="flex items-center gap-2 text-purple-900">
+        <i class="fas fa-user-shield"></i>
+        Doctor Profile
+    </span>
+{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Profile Overview -->
+    <section class="grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-purple-50 p-6">
+            <div class="flex flex-col md:flex-row gap-6 items-center">
+                <div class="relative">
+                    {% if clinic_user.profile_picture %}
+                        <img src="{{ clinic_user.profile_picture.url }}" alt="{{ doctor_name }}" class="w-32 h-32 rounded-2xl object-cover shadow-xl border-4 border-purple-200">
+                    {% else %}
+                        {% with profile_name=doctor_name|default:doctor_username %}
+                        <div class="w-32 h-32 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold shadow-xl">
+                            {{ profile_name|slice:':1'|upper }}
+                        </div>
+                        {% endwith %}
+                    {% endif %}
+                    <label for="profile_picture" class="absolute -bottom-3 -right-3 bg-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-purple-700 transition">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm uppercase tracking-widest text-gray-500">{{ doctor_department.name|default:"Clinic Team" }}</p>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ doctor_name }}</h1>
+                    <p class="text-gray-600 mt-1 flex items-center gap-2"><i class="fas fa-envelope text-purple-500"></i>{{ doctor_email|default:"No email set" }}</p>
+                    <p class="text-gray-600 mt-1 flex items-center gap-2"><i class="fas fa-phone text-purple-500"></i>{{ clinic_user.phone|default:"No phone set" }}</p>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="bg-gradient-to-r from-teal-500 to-emerald-500 rounded-xl text-white p-4">
+                            <p class="text-xs uppercase tracking-widest opacity-80">Patients Waiting</p>
+                            <p class="text-3xl font-bold">{{ waiting_count|default:0 }}</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl text-white p-4">
+                            <p class="text-xs uppercase tracking-widest opacity-80">In Consultation</p>
+                            <p class="text-3xl font-bold">{{ in_consultation_count|default:0 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-purple-900 text-white rounded-2xl shadow-lg p-6">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm uppercase tracking-widest text-purple-200">Focus</p>
+                    <h2 class="text-2xl font-bold">Personal Brief</h2>
+                </div>
+                <i class="fas fa-heartbeat text-3xl text-purple-200"></i>
+            </div>
+            <ul class="mt-6 space-y-4 text-purple-100 text-sm">
+                <li class="flex items-center gap-3"><span class="w-2 h-2 bg-emerald-300 rounded-full"></span>Keep your details updated so reception can coordinate without delays.</li>
+                <li class="flex items-center gap-3"><span class="w-2 h-2 bg-sky-300 rounded-full"></span>Upload a professional portrait for patient-facing screens.</li>
+                <li class="flex items-center gap-3"><span class="w-2 h-2 bg-orange-300 rounded-full"></span>Use a strong password that differs from other systems.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Hidden file upload form -->
+    <form id="profile-picture-form" class="hidden" method="POST" enctype="multipart/form-data" action="{% url 'doctor_update_profile_picture' %}">
+        {% csrf_token %}
+        <input type="file" id="profile_picture" name="profile_picture" accept="image/*" onchange="this.form.submit()">
+    </form>
+
+    <!-- Activity Stats -->
+    <section class="grid gap-4 md:grid-cols-3">
+        <article class="bg-white border border-teal-50 rounded-2xl p-5 shadow">
+            <p class="text-xs uppercase tracking-widest text-teal-500">Consultations (30 days)</p>
+            <p class="text-4xl font-bold text-gray-900 mt-2">{{ consultations_completed|default:0 }}</p>
+            <p class="text-sm text-gray-500">Completed visits you signed off.</p>
+        </article>
+        <article class="bg-white border border-amber-50 rounded-2xl p-5 shadow">
+            <p class="text-xs uppercase tracking-widest text-amber-500">Unique Patients (7 days)</p>
+            <p class="text-4xl font-bold text-gray-900 mt-2">{{ patients_this_week|default:0 }}</p>
+            <p class="text-sm text-gray-500">Distinct individuals you have seen.</p>
+        </article>
+        <article class="bg-white border border-indigo-50 rounded-2xl p-5 shadow">
+            <p class="text-xs uppercase tracking-widest text-indigo-500">Prescriptions (30 days)</p>
+            <p class="text-4xl font-bold text-gray-900 mt-2">{{ prescriptions_written|default:0 }}</p>
+            <p class="text-sm text-gray-500">Orders issued from your sessions.</p>
+        </article>
+    </section>
+
+    <!-- Preferences & Settings -->
+    <section id="preferences" class="grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow border border-gray-100 p-6">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-6">Profile Details</h3>
+            <form method="POST" action="{% url 'doctor_update_profile' %}" class="space-y-6">
+                {% csrf_token %}
+                <div class="grid gap-4 md:grid-cols-2">
+                    <label class="flex flex-col text-sm font-medium text-gray-700">First Name
+                        <input type="text" name="first_name" value="{{ request.user.first_name }}" class="mt-1 w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" required>
+                    </label>
+                    <label class="flex flex-col text-sm font-medium text-gray-700">Last Name
+                        <input type="text" name="last_name" value="{{ request.user.last_name }}" class="mt-1 w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" required>
+                    </label>
+                    <label class="flex flex-col text-sm font-medium text-gray-700">Email
+                        <input type="email" name="email" value="{{ doctor_email }}" class="mt-1 w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" required>
+                    </label>
+                    <label class="flex flex-col text-sm font-medium text-gray-700">Phone Number
+                        <input type="tel" name="phone" value="{{ clinic_user.phone|default:'' }}" class="mt-1 w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="+250...">
+                    </label>
+                </div>
+
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-4">
+                    <h4 class="text-lg font-semibold text-gray-900">Password (optional)</h4>
+                    <label class="flex flex-col text-sm font-medium text-gray-700">Current Password
+                        <input type="password" name="current_password" class="mt-1 w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Leave blank to keep current password">
+                    </label>
+                    <label class="flex flex-col text-sm font-medium text-gray-700">New Password
+                        <input type="password" name="new_password" class="mt-1 w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Minimum 8 characters">
+                    </label>
+                    <label class="flex flex-col text-sm font-medium text-gray-700">Confirm Password
+                        <input type="password" name="confirm_password" class="mt-1 w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Re-enter new password">
+                    </label>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button type="submit" class="flex-1 bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition shadow">
+                        <i class="fas fa-save mr-2"></i>Save Preferences
+                    </button>
+                    <a href="{% url 'doctor_dashboard_enhanced' %}" class="flex-1 text-center bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold hover:bg-gray-300 transition">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow border border-gray-100 p-6 space-y-5">
+            <h3 class="text-2xl font-semibold text-gray-900">Upcoming</h3>
+            {% if upcoming_appointments %}
+                <ul class="space-y-4">
+                    {% for appointment in upcoming_appointments %}
+                        <li class="p-4 rounded-xl border border-gray-100 hover:border-purple-200 transition">
+                            <p class="text-sm text-gray-500">{{ appointment.scheduled_at|date:"M d, Y H:i" }}</p>
+                            <p class="text-base font-semibold text-gray-900">{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</p>
+                            <p class="text-sm text-gray-500 flex items-center gap-2"><i class="fas fa-building text-purple-500"></i>{{ appointment.department.name|default:"General" }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="p-4 rounded-xl bg-gray-50 text-gray-500 flex items-center gap-3">
+                    <i class="fas fa-calendar-check text-2xl text-gray-400"></i>
+                    No appointments scheduled yet.
+                </div>
+            {% endif %}
+
+            <div class="border-t border-gray-100 pt-4">
+                <h4 class="text-lg font-semibold text-gray-900">Recent Patients</h4>
+                {% if recent_patients %}
+                    <ul class="mt-3 space-y-3 text-sm">
+                        {% for visit in recent_patients %}
+                            <li class="flex justify-between text-gray-600">
+                                <span>{{ visit.patient.first_name }} {{ visit.patient.last_name }}</span>
+                                <span>{{ visit.created_at|date:"M d" }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-500 mt-3">No recent visits recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+
+{% if messages %}
+<div class="fixed top-20 right-4 z-50 space-y-2">
+    {% for message in messages %}
+        <div class="px-4 py-3 rounded-xl shadow-lg text-sm font-medium {% if message.tags == 'error' %}bg-red-100 text-red-700 border border-red-200{% elif message.tags == 'success' %}bg-emerald-100 text-emerald-700 border border-emerald-200{% else %}bg-blue-100 text-blue-700 border border-blue-200{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prescription #{{ prescription.id|stringformat:"05d" }} - Nora Dental Clinic</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; padding: 40px; background: white; color: #000; }
+        .print-container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+        .clinic-logo { max-width: 120px; height: auto; margin-bottom: 15px; }
+        .clinic-name { font-size: 28px; font-weight: bold; color: #1e40af; margin-bottom: 8px; }
+        .clinic-info { font-size: 12px; color: #666; line-height: 1.6; }
+        .prescription-header { display: flex; justify-content: space-between; margin-bottom: 30px; padding: 15px; background: #f3f4f6; border-radius: 8px; }
+        .prescription-info { flex: 1; }
+        .info-row { margin-bottom: 8px; font-size: 14px; }
+        .info-label { font-weight: bold; color: #374151; display: inline-block; min-width: 120px; }
+        .info-value { color: #1f2937; }
+        .prescription-id { font-size: 20px; font-weight: bold; color: #2563eb; }
+        .section-title { font-size: 18px; font-weight: bold; color: #1e40af; margin: 30px 0 15px 0; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+        .medications-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .medications-table th { background: #f3f4f6; padding: 12px; text-align: left; font-size: 13px; font-weight: bold; border: 1px solid #d1d5db; }
+        .medications-table td { padding: 12px; border: 1px solid #e5e7eb; font-size: 13px; }
+        .medications-table tr:nth-child(even) { background: #f9fafb; }
+        .notes-box { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 15px; margin-top: 20px; }
+        .notes-title { font-weight: bold; color: #92400e; margin-bottom: 8px; }
+        .notes-content { color: #78350f; font-size: 14px; line-height: 1.6; }
+        .footer { margin-top: 50px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+        .signature-box { text-align: center; }
+        .signature-line { border-top: 2px solid #000; width: 200px; margin: 0 auto 10px auto; padding-top: 5px; }
+        .signature-label { font-size: 12px; color: #666; }
+        .print-date { text-align: center; color: #9ca3af; font-size: 11px; margin-top: 20px; }
+        @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+        }
+        .print-btn { position: fixed; top: 20px; right: 20px; padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .print-btn:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+    <button class="print-btn no-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Print Prescription
+    </button>
+
+    <div class="print-container">
+        <!-- Header -->
+        <div class="header">
+            <img src="{% static 'images/logo.png' %}" alt="Nora Dental Clinic Logo" class="clinic-logo">
+            <div class="clinic-name">NORA DENTAL CLINIC</div>
+            <div class="clinic-info">
+                Location: Gasabo, Kigali<br>
+                Phone: +250 798 287 919 | Email: norhadentalclinic@gmail.com
+            </div>
+        </div>
+
+        <!-- Prescription Header -->
+        <div class="prescription-header">
+            <div class="prescription-info">
+                <div class="info-row">
+                    <span class="info-label">Prescription ID:</span>
+                    <span class="prescription-id">#{{ prescription.id|stringformat:"05d" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value">{{ prescription.created_at|date:"F d, Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Time:</span>
+                    <span class="info-value">{{ prescription.created_at|date:"h:i A" }}</span>
+                </div>
+            </div>
+            <div class="prescription-info">
+                <div class="info-row">
+                    <span class="info-label">Patient Name:</span>
+                    <span class="info-value">{{ prescription.patient.first_name }} {{ prescription.patient.last_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Patient ID:</span>
+                    <span class="info-value">{{ prescription.patient.patient_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Doctor:</span>
+                    <span class="info-value">{{ prescription.doctor.user.get_full_name }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medications -->
+        <div class="section-title">Prescribed Medications</div>
+        <table class="medications-table">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">Medication</th>
+                    <th style="width: 15%;">Dosage</th>
+                    <th style="width: 15%;">Frequency</th>
+                    <th style="width: 12%;">Duration</th>
+                    <th style="width: 10%;">Quantity</th>
+                    <th style="width: 18%;">Instructions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in prescription.items.all %}
+                <tr>
+                    <td><strong>{% if item.inventory_item %}{{ item.inventory_item.name }}{% else %}{{ item.custom_name }}{% endif %}</strong></td>
+                    <td>{{ item.dosage|default:"N/A" }}</td>
+                    <td>{{ item.frequency|default:"N/A" }}</td>
+                    <td>{{ item.duration|default:"N/A" }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.instructions|default:"As directed" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #999;">No medications prescribed</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Additional Notes -->
+        {% if prescription.notes %}
+        <div class="notes-box">
+            <div class="notes-title">Additional Notes:</div>
+            <div class="notes-content">{{ prescription.notes }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Doctor's Signature</div>
+                    <div class="signature-label"><strong>{{ prescription.doctor.user.get_full_name }}</strong></div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Pharmacist's Signature</div>
+                </div>
+            </div>
+            <div class="print-date">
+                Printed on: {{ now|date:"F d, Y - h:i A" }}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when page loads (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>
